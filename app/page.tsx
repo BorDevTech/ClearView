@@ -1,105 +1,143 @@
 "use client";
 
-import Image from "next/image";
+import {
+  Box,
+  Button,
+  Card,
+  Center,
+  Checkbox,
+  Container,
+  createListCollection,
+  For,
+  Heading,
+  HStack,
+  Input,
+  Select,
+  Stack,
+} from "@chakra-ui/react";
+
+// colors pallete #41b883 and #2179b5
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <Container as={"main"} bg={"#2179b5"} h={"100vh"}>
+      <Center alignItems={"center"} justifyContent={"center"}>
+        <Stack>
+          <Heading alignItems={"center"} justifyContent={"center"}>
+            🪪 ClearView - VetID
+          </Heading>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <p> One Portal. Every Vet. Instant Results.</p>
+          <Card.Root width="320px">
+            <Card.Body gap="2">
+              <Card.Title mt="2">State</Card.Title>
+              <Select.Root collection={ListedState}>
+                <Select.HiddenSelect />
+                <Select.Label color={"#41b883"} />
+
+                <Select.Control>
+                  <Select.Trigger>
+                    <Select.ValueText
+                      placeholder="Select a State"
+                      color={"white"}
+                    />
+                  </Select.Trigger>
+                  <Select.IndicatorGroup>
+                    <Select.Indicator />
+                    <Select.ClearTrigger />
+                  </Select.IndicatorGroup>
+                </Select.Control>
+
+                <Select.Positioner>
+                  <Select.Content color={"#41b883"}>
+                    {ListedState.items.map((state) => (
+                      <Select.Item item={state} key={state.value}>
+                        {state.value}
+                        <Select.ItemIndicator />
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select.Positioner>
+              </Select.Root>
+
+              <Stack>
+                <Stack>
+                  <HStack>
+                    <Stack>
+                      <Card.Title mt="2">First Name</Card.Title>
+                      <Input placeholder="First Name"></Input>
+                    </Stack>
+                    <Stack>
+                      <Card.Title mt="2">Last Name</Card.Title>
+                      <Input placeholder="Last Name"></Input>
+                    </Stack>
+                  </HStack>
+
+                  <Card.Title mt="2">License Number</Card.Title>
+                  <Input placeholder="License Number"></Input>
+                </Stack>
+              </Stack>
+            </Card.Body>
+            <Card.Footer justifyContent="flex-end">
+              <Button variant="outline">Clear</Button>
+              <Button>Search</Button>
+            </Card.Footer>
+          </Card.Root>
+          <Card.Root width="320px">
+            <Card.Body gap="2">
+              <Stack align={"start"}>
+                <Card.Title mt="2">License Status</Card.Title>
+                <Checkbox.Root
+                  defaultChecked
+                  variant={"solid"}
+                  colorPalette={"green"}
+                  readOnly
+                >
+                  <Checkbox.HiddenInput />
+                  <Checkbox.Control>
+                    <Checkbox.Indicator />
+                  </Checkbox.Control>
+                  <Checkbox.Label color={"green.500"}>Active</Checkbox.Label>
+                </Checkbox.Root>
+                <p>Issued by:</p>
+                <p>
+                  License Expiration Date:
+                  {new Date().toLocaleDateString()}
+                </p>
+                <p>License Number: </p>
+                <p> click View official state verification page</p>
+              </Stack>
+            </Card.Body>
+            <Card.Footer justifyContent="flex-end"></Card.Footer>
+          </Card.Root>
+        </Stack>
+      </Center>
+    </Container>
   );
 }
+
+const ListedState = createListCollection({
+  items: [
+    { name: "No_Selection", value: "Select a State" },
+    { name: "AL", value: "Alabama" },
+    { name: "AK", value: "Alaska" },
+    { name: "AB", value: "Alberta" },
+    { name: "AZ", value: "Arizona" },
+    { name: "AR", value: "Arkansas" },
+    { name: "BC", value: "British Columbia" },
+    { name: "CA", value: "California" },
+    { name: "CO", value: "Colorado" },
+    { name: "CT", value: "Connecticut" },
+    { name: "DE", value: "Delaware" },
+    { name: "DC", value: "District of Columbia" },
+    { name: "FL", value: "Florida" },
+  ],
+});
+const frameworks = createListCollection({
+  items: [
+    { label: "Florida", value: "FL" },
+    { label: "Vue.js", value: "vue" },
+    { label: "Angular", value: "angular" },
+    { label: "Svelte", value: "svelte" },
+  ],
+});
