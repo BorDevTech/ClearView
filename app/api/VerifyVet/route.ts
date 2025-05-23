@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
       status: response.status,
     });
   } catch (error) {
-    return Response.json({ error: "Failed to fetch data" }, { status: 500 });
+    // Remove unused variable warning by using the error in the response
+    return Response.json({ error: (error instanceof Error ? error.message : 'Failed to fetch data') }, { status: 500 });
   }
 }
