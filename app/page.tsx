@@ -5,7 +5,6 @@ import {
   Button,
   Card,
   Center,
-  Checkbox,
   Container,
   createListCollection,
   Heading,
@@ -15,8 +14,6 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-
-import { HiOutlineX } from "react-icons/hi";
 import { useState } from "react";
 
 // colors pallete #41b883 and #2179b5
@@ -67,7 +64,8 @@ export default function Home() {
       // Query string parameters (always present)
       const queryParams = new URLSearchParams({
         mode: licenseNumber && licenseNumber.trim() !== "" ? "2" : "2", // Always '2' per screenshot
-        search: licenseNumber && licenseNumber.trim() !== "" ? "LicNbr" : "Name",
+        search:
+          licenseNumber && licenseNumber.trim() !== "" ? "LicNbr" : "Name",
         SID: "",
         brd: "",
         typ: "N",
@@ -76,7 +74,10 @@ export default function Home() {
       // Form data: include all fields, even if empty
       const formData = new URLSearchParams();
       formData.append("hSID", "");
-      formData.append("hSearchType", licenseNumber && licenseNumber.trim() !== "" ? "LicNbr" : "Name");
+      formData.append(
+        "hSearchType",
+        licenseNumber && licenseNumber.trim() !== "" ? "LicNbr" : "Name"
+      );
       formData.append("hLastName", "");
       formData.append("hFirstName", "");
       formData.append("hMiddleName", "");
@@ -214,8 +215,8 @@ export default function Home() {
       setError(
         results.length === 0 ? "No valid license found or parse error" : null
       );
-    } catch (err: any) {
-      setError(err.message || "Unknown error");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Unknown error");
     } finally {
       setLoading(false);
     }
@@ -308,7 +309,9 @@ export default function Home() {
               </Stack>
             </Card.Body>
             <Card.Footer justifyContent="flex-end">
-              <Button variant="outline" onClick={clearForm}>Clear</Button>
+              <Button variant="outline" onClick={clearForm}>
+                Clear
+              </Button>
               <Button onClick={handleSearch} loading={loading}>
                 Search
               </Button>
@@ -354,62 +357,69 @@ export default function Home() {
                           <Card.Title mt="2">
                             <a
                               href="#"
-                              style={{ color: '#2179b5', textDecoration: 'underline' }}
-                              onClick={e => {
+                              style={{
+                                color: "#2179b5",
+                                textDecoration: "underline",
+                              }}
+                              onClick={(e) => {
                                 e.preventDefault();
                                 // Create and submit a hidden form to DBPR with all required fields
-                                const form = document.createElement('form');
-                                form.method = 'POST';
-                                form.action = 'https://www.myfloridalicense.com/wl11.asp?mode=2&search=LicNbr&SID=&brd=&typ=N';
-                                form.target = '_blank';
-                                const addField = (name: string, value: string) => {
-                                  const input = document.createElement('input');
-                                  input.type = 'hidden';
+                                const form = document.createElement("form");
+                                form.method = "POST";
+                                form.action =
+                                  "https://www.myfloridalicense.com/wl11.asp?mode=2&search=LicNbr&SID=&brd=&typ=N";
+                                form.target = "_blank";
+                                const addField = (
+                                  name: string,
+                                  value: string
+                                ) => {
+                                  const input = document.createElement("input");
+                                  input.type = "hidden";
                                   input.name = name;
                                   input.value = value;
                                   form.appendChild(input);
                                 };
-                                addField('hSID', '');
-                                addField('hSearchType', 'LicNbr');
-                                addField('hLastName', '');
-                                addField('hFirstName', '');
-                                addField('hMiddleName', '');
-                                addField('hOrgName', '');
-                                addField('hSearchOpt', 'Organization');
-                                addField('hSearchOpt2', 'Alt');
-                                addField('hSearchAltName', '');
-                                addField('hSearchPartName', '');
-                                addField('hSearchFuzzy', '');
-                                addField('hDivision', 'ALL');
-                                addField('hBoard', '26');
-                                addField('LicenseType', '2601');
-                                addField('hSpecQual', '');
-                                addField('hAddrType', '');
-                                addField('hCity', '');
-                                addField('hCounty', '');
-                                addField('hState', '');
-                                addField('hLicNbr', item.licenseNumber);
-                                addField('hAction', '');
-                                addField('hCurPage', '');
-                                addField('hTotalPages', '');
-                                addField('hTotalRecords', '');
-                                addField('hPageAction', '');
-                                addField('hDDChange', '');
-                                addField('hBoardType', '');
-                                addField('hSearchHistoric', '');
-                                addField('hRecsPerPage', '10000');
+                                addField("hSID", "");
+                                addField("hSearchType", "LicNbr");
+                                addField("hLastName", "");
+                                addField("hFirstName", "");
+                                addField("hMiddleName", "");
+                                addField("hOrgName", "");
+                                addField("hSearchOpt", "Organization");
+                                addField("hSearchOpt2", "Alt");
+                                addField("hSearchAltName", "");
+                                addField("hSearchPartName", "");
+                                addField("hSearchFuzzy", "");
+                                addField("hDivision", "ALL");
+                                addField("hBoard", "26");
+                                addField("LicenseType", "2601");
+                                addField("hSpecQual", "");
+                                addField("hAddrType", "");
+                                addField("hCity", "");
+                                addField("hCounty", "");
+                                addField("hState", "");
+                                addField("hLicNbr", item.licenseNumber);
+                                addField("hAction", "");
+                                addField("hCurPage", "");
+                                addField("hTotalPages", "");
+                                addField("hTotalRecords", "");
+                                addField("hPageAction", "");
+                                addField("hDDChange", "");
+                                addField("hBoardType", "");
+                                addField("hSearchHistoric", "");
+                                addField("hRecsPerPage", "10000");
                                 // Add user fields as empty (not needed for LicNbr search)
-                                addField('FirstName', '');
-                                addField('MiddleName', '');
-                                addField('LastName', '');
-                                addField('OrgName', '');
-                                addField('Board', '26');
-                                addField('City', '');
-                                addField('County', '');
-                                addField('State', '');
-                                addField('RecsPerPage', '10000');
-                                addField('LicNbr', item.licenseNumber);
-                                addField('Search1', 'Search');
+                                addField("FirstName", "");
+                                addField("MiddleName", "");
+                                addField("LastName", "");
+                                addField("OrgName", "");
+                                addField("Board", "26");
+                                addField("City", "");
+                                addField("County", "");
+                                addField("State", "");
+                                addField("RecsPerPage", "10000");
+                                addField("LicNbr", item.licenseNumber);
+                                addField("Search1", "Search");
                                 document.body.appendChild(form);
                                 form.submit();
                                 document.body.removeChild(form);
