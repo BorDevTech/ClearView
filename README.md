@@ -2,6 +2,9 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 ## Accessing the Project 
 
 Visit the evaluated environment url: https://bordevtech.github.io/ClearView/
+
+Visit the CURRENT LIVE url: https://clear-view-two.vercel.app/
+
 ## Getting Started
 
 First, run the development server:
