@@ -1,22 +1,36 @@
 "use client";
 
 import {
+  Avatar,
   Box,
   Button,
   Card,
   Center,
+  Checkbox,
   Container,
   createListCollection,
   Heading,
   HStack,
+  Icon,
   Input,
   Select,
   Stack,
   Text,
 } from "@chakra-ui/react";
+
+import { HiOutlineX } from "react-icons/hi";
 import { useState } from "react";
+import { stat } from "fs";
+import { VscCircleFilled } from "react-icons/vsc";
 
 // colors pallete #41b883 and #2179b5
+
+// Define the structure of the state definition
+interface StateDefinition {
+  active: boolean | null; // Use null for "No Selection"
+  initials: string;
+  value: string;
+}
 
 // Update the result type to match the actual DBPR fields
 interface VetResult {
@@ -25,24 +39,73 @@ interface VetResult {
   status: string;
   expiration: string;
   licenseType: string;
-  address?: string;
 }
 
-const ListedState = createListCollection({
+const ListedStates = createListCollection<StateDefinition>({
   items: [
-    { name: "No_Selection", value: "Select a State" },
-    { name: "AL", value: "Alabama" },
-    { name: "AK", value: "Alaska" },
-    { name: "AB", value: "Alberta" },
-    { name: "AZ", value: "Arizona" },
-    { name: "AR", value: "Arkansas" },
-    { name: "BC", value: "British Columbia" },
-    { name: "CA", value: "California" },
-    { name: "CO", value: "Colorado" },
-    { name: "CT", value: "Connecticut" },
-    { name: "DE", value: "Delaware" },
-    { name: "DC", value: "District of Columbia" },
-    { name: "FL", value: "Florida" },
+    { active: null, initials: "No_Selection", value: "Select a State" },
+    { active: false, initials: "AL", value: "Alabama" },
+    { active: false, initials: "AK", value: "Alaska" },
+    { active: false, initials: "AB", value: "Alberta" },
+    { active: false, initials: "AZ", value: "Arizona" },
+    { active: false, initials: "AR", value: "Arkansas" },
+    { active: false, initials: "BC", value: "British Columbia" },
+    { active: false, initials: "CA", value: "California" },
+    { active: false, initials: "CO", value: "Colorado" },
+    { active: false, initials: "CT", value: "Connecticut" },
+    { active: false, initials: "DE", value: "Delaware" },
+    { active: false, initials: "DC", value: "District of Columbia" },
+    { active: true, initials: "FL", value: "Florida" },
+    { active: false, initials: "GA", value: "Georgia" },
+    { active: false, initials: "HI", value: "Hawaii" },
+    { active: false, initials: "ID", value: "Idaho" },
+    { active: false, initials: "IL", value: "Illinois" },
+    { active: false, initials: "IN", value: "Indiana" },
+    { active: false, initials: "IA", value: "Iowa" },
+    { active: false, initials: "KS", value: "Kansa" },
+    { active: false, initials: "KY", value: "Kentucky" },
+    { active: false, initials: "LA", value: "Louisiana" },
+    { active: false, initials: "ME", value: "Maine" },
+    { active: false, initials: "MB", value: "Manitoba" },
+    { active: false, initials: "MD", value: "Maryland" },
+    { active: false, initials: "MA", value: "Massachusetts" },
+    { active: false, initials: "MI", value: "Michigan" },
+    { active: false, initials: "MN", value: "Minnesota" },
+    { active: false, initials: "MS", value: "Mississippi" },
+    { active: false, initials: "MO", value: "Missouri" },
+    { active: false, initials: "MT", value: "Montana" },
+    { active: false, initials: "NE", value: "Nebraska" },
+    { active: false, initials: "NV", value: "Nevada" },
+    { active: false, initials: "NB", value: "New Brunswick" },
+    { active: false, initials: "NH", value: "New Hampshire" },
+    { active: false, initials: "NJ", value: "New Jersey" },
+    { active: false, initials: "NM", value: "New Mexico" },
+    { active: false, initials: "NY", value: "New York" },
+    { active: false, initials: "NL", value: "Newfoundland & Labrador" },
+    { active: false, initials: "NC", value: "North Carolina" },
+    { active: false, initials: "ND", value: "North Dakota" },
+    { active: false, initials: "NS", value: "Nova Scotia" },
+    { active: false, initials: "OH", value: "Ohio" },
+    { active: false, initials: "OK", value: "Oklahoma" },
+    { active: false, initials: "ON", value: "Ontario" },
+    { active: false, initials: "OR", value: "Oregon" },
+    { active: false, initials: "PA", value: "Pennsylvania" },
+    { active: false, initials: "PE", value: "Prince Edward Island" },
+    { active: false, initials: "PR", value: "Puerto Rico" },
+    { active: false, initials: "QC", value: "Quebec" },
+    { active: false, initials: "RI", value: "Rhode Island" },
+    { active: false, initials: "SK", value: "Saskatchewan" },
+    { active: false, initials: "SC", value: "South Carolina" },
+    { active: false, initials: "SD", value: "South Dakota" },
+    { active: false, initials: "TN", value: "Tennessee" },
+    { active: false, initials: "TX", value: "Texas" },
+    { active: false, initials: "UT", value: "Utah" },
+    { active: false, initials: "VT", value: "Vermont" },
+    { active: false, initials: "VA", value: "Virginia" },
+    { active: false, initials: "WA", value: "Washington" },
+    { active: false, initials: "WV", value: "West Virginia" },
+    { active: false, initials: "WI", value: "Wisconsin" },
+    { active: false, initials: "WY", value: "Wyoming" },
   ],
 });
 
@@ -54,182 +117,75 @@ export default function Home() {
   const [lastName, setLastName] = useState("");
   const [licenseNumber, setLicenseNumber] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const resultsPerPage = 6; // Show up to 6 results per page to fill the grid
+  const resultsPerPage = 5; // Adjust as needed
 
   const handleSearch = async () => {
     setLoading(true);
     setError(null);
     setResult(null);
     try {
-      // Query string parameters (always present)
-      const queryParams = new URLSearchParams({
-        mode: licenseNumber && licenseNumber.trim() !== "" ? "2" : "2", // Always '2' per screenshot
-        search:
-          licenseNumber && licenseNumber.trim() !== "" ? "LicNbr" : "Name",
-        SID: "",
-        brd: "",
-        typ: "N",
+      const params = new URLSearchParams({
+        firstName,
+        lastName,
+        licenseNumber,
       });
-
-      // Form data: include all fields, even if empty
-      const formData = new URLSearchParams();
-      formData.append("hSID", "");
-      formData.append(
-        "hSearchType",
-        licenseNumber && licenseNumber.trim() !== "" ? "LicNbr" : "Name"
-      );
-      formData.append("hLastName", "");
-      formData.append("hFirstName", "");
-      formData.append("hMiddleName", "");
-      formData.append("hOrgName", "");
-      formData.append("hSearchOpt", "");
-      formData.append("hSearchOpt2", "");
-      formData.append("hSearchAltName", "");
-      formData.append("hSearchPartName", "");
-      formData.append("hSearchFuzzy", "");
-      formData.append("hDivision", "ALL");
-      formData.append("hBoard", "210");
-      formData.append("LicenseType", "2601");
-      formData.append("hSpecQual", "");
-      formData.append("hAddrType", "");
-      formData.append("hCity", "");
-      formData.append("hCounty", "");
-      formData.append("hState", "");
-      formData.append("hLicNbr", "");
-      formData.append("hAction", "");
-      formData.append("hCurPage", "");
-      formData.append("hTotalPages", "");
-      formData.append("hTotalRecords", "");
-      formData.append("hPageAction", "");
-      formData.append("hDDChange", "");
-      formData.append("hBoardType", "");
-      // Remove hLicenseType if present
-      // formData.append("hLicTyp", "");
-      formData.append("hSearchHistoric", "");
-      formData.append("hRecsPerPage", "10000");
-      // Actual search fields (user input)
-      formData.append("FirstName", firstName);
-      formData.append("MiddleName", "");
-      formData.append("LastName", lastName);
-      formData.append("OrgName", "");
-      formData.append("Board", "26");
-      formData.append("City", "");
-      formData.append("County", "");
-      formData.append("State", "");
-      formData.append("RecsPerPage", "10000");
-      formData.append("LicNbr", licenseNumber);
-      formData.append("Search1", "Search");
-
-      const res = await fetch(`/api/VerifyVet?${queryParams.toString()}`, {
+      const res = await fetch(`/api/VerifyVet?${params.toString()}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: formData.toString(),
       });
       if (!res.ok) throw new Error("Failed to fetch");
       const html = await res.text();
-      // Debug: Log the first 1000 chars and number of <tr> rows
-      if (process.env.NODE_ENV !== "production") {
-        console.log("HTML preview:", html.slice(0, 1000));
-      }
       // Find all table rows
       const rows = html.match(/<tr[\s\S]*?<\/tr>/gi) || [];
-      if (process.env.NODE_ENV !== "production") {
-        console.log("Found rows:", rows.length);
-        console.log("First 3 rows:", rows.slice(0, 3));
-      }
-      const results: VetResult[] = [];
-      for (let i = 0; i < rows.length; i++) {
-        // Extract all <td> cells for this row
-        const tdMatches = [...rows[i].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
-        if (tdMatches.length < 5) continue;
-        // License Type (1st <td>)
-        const licenseType = tdMatches[0][1].replace(/<[^>]+>/g, "").trim();
-        if (licenseType.toLowerCase() !== "veterinarian") continue;
-        // Name (2nd <td>, inside <a>)
-        const nameTd = tdMatches[1][1];
-        const nameMatch = nameTd.match(/<a[^>]*>([^<]+)<\/a>/i);
-        const name = nameMatch
-          ? nameMatch[1].trim()
-          : nameTd.replace(/<[^>]+>/g, "").trim();
-        // License Number (4th <td>, before <br/>)
-        const licenseNumTd = tdMatches[3][1];
-        const licenseNumber = licenseNumTd
-          .split(/<br\s*\/?/i)[0]
-          .replace(/<[^>]+>/g, "")
-          .trim();
-        // Status/Expiration (5th <td>)
-        const statusExpTd = tdMatches[4][1];
-        const statusExp = statusExpTd
-          .replace(/<[^>]+>/g, "")
-          .replace(/<br\s*\/?>(\s*)?/gi, ", ")
-          .trim();
-        if (!name || !/Current,\s*Active/i.test(statusExp)) continue;
-        // Extract expiration date (after 'Current, Active')
-        const expMatch = statusExp.match(/Current,\s*Active,?\s*([0-9\/]+)/i);
-        const expiration = expMatch ? expMatch[1].trim() : "";
-        // Address: look at next <tr> (if exists and has <td colspan)
-        let address = "";
-        if (i + 1 < rows.length) {
-          const nextRow = rows[i + 1];
-          if (/colspan=['\"]?6['\"]?/i.test(nextRow)) {
-            // Try to extract address from the next row
-            const addrMatch = nextRow.match(
-              /<b>Main Address\*:<\/b>.*?<td[^>]*>([\s\S]*?)<\/td>/i
-            );
-            if (addrMatch) {
-              address = addrMatch[1]
-                .replace(/<[^>]+>/g, "")
-                .replace(/\s+/g, " ")
-                .trim();
-            } else {
-              // Fallback: just get the first <td> after colspan
-              const fallbackAddr = nextRow.match(
-                /<td[^>]*colspan=['\"]?6['\"]?[^>]*>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>/i
-              );
-              if (fallbackAddr) {
-                address = fallbackAddr[1]
-                  .replace(/<[^>]+>/g, "")
-                  .replace(/\s+/g, " ")
-                  .trim();
-              }
-            }
+      const results: VetResult[] = rows
+        .map((row) => {
+          // Extract all <td> cells
+          const tdMatches = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
+          if (tdMatches.length < 5) return null;
+          // Name (2nd <td>, inside <a>)
+          const nameTd = tdMatches[1][1];
+          const nameMatch = nameTd.match(/<a[^>]*>([^<]+)<\/a>/i);
+          const name = nameMatch
+            ? nameMatch[1].trim()
+            : nameTd.replace(/<[^>]+>/g, "").trim();
+          // Status/Expiration (5th <td>)
+          const statusExp = tdMatches[4][1].replace(/<[^>]+>/g, "").trim();
+          let status = "";
+          let expiration = "";
+          if (/current/i.test(statusExp) && /active/i.test(statusExp)) {
+            status = "Current, Active";
+            // Try to extract the date after 'Active,'
+            const dateMatch = statusExp.match(/Active,\s*([0-9/]+)/i);
+            expiration = dateMatch ? dateMatch[1].trim() : "";
+          } else {
+            // Fallback: split by comma
+            const parts = statusExp.split(",");
+            status = parts[0] ? parts[0].trim() : "";
+            expiration = parts[1] ? parts[1].trim() : "";
           }
-        }
-        results.push({
-          name,
-          licenseNumber,
-          status: "Active",
-          expiration,
-          licenseType,
-          address,
-        });
-      }
-      // If no results, show a debug message
-      if (results.length === 0 && process.env.NODE_ENV !== "production") {
-        console.log("No veterinarian rows matched. Check table structure.");
-      }
+          // Only include if name and expiration are present
+          if (!name || !expiration) return null;
+          return {
+            name,
+            licenseNumber: "", // You can add logic for license number if needed
+            status,
+            expiration,
+            licenseType: "", // You can add logic for license type if needed
+          };
+        })
+        .filter(Boolean) as VetResult[];
       setResult(results);
       setCurrentPage(1); // Reset to first page on new search
       setError(
         results.length === 0 ? "No valid license found or parse error" : null
       );
-    } catch (err: unknown) {
-      setError((err as Error).message || "Unknown error");
+    } catch (err: any) {
+      setError(err.message || "Unknown error");
     } finally {
       setLoading(false);
     }
-  };
-
-  // Add a clearForm function to reset all fields
-  const clearForm = () => {
-    setFirstName("");
-    setLastName("");
-    setLicenseNumber("");
-    setResult(null);
-    setError(null);
-    setCurrentPage(1);
   };
 
   return (
@@ -244,7 +200,7 @@ export default function Home() {
           <Card.Root width="320px">
             <Card.Body gap="2">
               <Card.Title mt="2">State</Card.Title>
-              <Select.Root collection={ListedState}>
+              <Select.Root collection={ListedStates}>
                 <Select.HiddenSelect />
                 <Select.Label color={"#41b883"} />
 
@@ -262,11 +218,19 @@ export default function Home() {
                 </Select.Control>
 
                 <Select.Positioner>
-                  <Select.Content color={"#41b883"}>
-                    {ListedState.items.map((state) => (
+                  <Select.Content>
+                    {ListedStates.items.map((state) => (
                       <Select.Item item={state} key={state.value}>
-                        {state.value}
-                        <Select.ItemIndicator />
+                        <HStack>
+                          {state.active === true ? (
+                            <Icon color="green.500" as={VscCircleFilled} />
+                          ) : state.active === false ? (
+                            <Icon color="red.500" as={VscCircleFilled} />
+                          ) : null}
+
+                          {state.value}
+                          <Select.ItemIndicator />
+                        </HStack>
                       </Select.Item>
                     ))}
                   </Select.Content>
@@ -309,132 +273,47 @@ export default function Home() {
               </Stack>
             </Card.Body>
             <Card.Footer justifyContent="flex-end">
-              <Button variant="outline" onClick={clearForm}>
-                Clear
-              </Button>
+              <Button variant="outline">Clear</Button>
               <Button onClick={handleSearch} loading={loading}>
                 Search
               </Button>
             </Card.Footer>
           </Card.Root>
-          <Card.Root width="100%">
+          <Card.Root width="320px">
             <Card.Body gap="2">
               {error && <Box color="red.500">{error}</Box>}
               {Array.isArray(result) && result.length > 0 && (
                 <>
-                  <Box
-                    display="grid"
-                    gridTemplateColumns={{
-                      base: "repeat(2, 1fr)",
-                      md: "repeat(3, 1fr)",
-                      xl: "repeat(4, 1fr)",
-                    }}
-                    gap={4}
-                  >
-                    {result
-                      .slice(
-                        (currentPage - 1) * resultsPerPage,
-                        currentPage * resultsPerPage
-                      )
-                      .map((item, idx) => (
-                        <Box
-                          key={idx}
-                          mb={4}
-                          borderWidth={1}
-                          borderRadius="md"
-                          p={3}
-                          bg={
-                            item.status === "Active"
-                              ? "green.50"
-                              : item.status === "Null and Void"
-                              ? "red.50"
-                              : "gray.50"
-                          }
-                          h="200px"
-                          overflow="hidden"
-                          color="black"
-                        >
-                          <Card.Title mt="2">
-                            <a
-                              href="#"
-                              style={{
-                                color: "#2179b5",
-                                textDecoration: "underline",
-                              }}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                // Create and submit a hidden form to DBPR with all required fields
-                                const form = document.createElement("form");
-                                form.method = "POST";
-                                form.action =
-                                  "https://www.myfloridalicense.com/wl11.asp?mode=2&search=LicNbr&SID=&brd=&typ=N";
-                                form.target = "_blank";
-                                const addField = (
-                                  name: string,
-                                  value: string
-                                ) => {
-                                  const input = document.createElement("input");
-                                  input.type = "hidden";
-                                  input.name = name;
-                                  input.value = value;
-                                  form.appendChild(input);
-                                };
-                                addField("hSID", "");
-                                addField("hSearchType", "LicNbr");
-                                addField("hLastName", "");
-                                addField("hFirstName", "");
-                                addField("hMiddleName", "");
-                                addField("hOrgName", "");
-                                addField("hSearchOpt", "Organization");
-                                addField("hSearchOpt2", "Alt");
-                                addField("hSearchAltName", "");
-                                addField("hSearchPartName", "");
-                                addField("hSearchFuzzy", "");
-                                addField("hDivision", "ALL");
-                                addField("hBoard", "26");
-                                addField("LicenseType", "2601");
-                                addField("hSpecQual", "");
-                                addField("hAddrType", "");
-                                addField("hCity", "");
-                                addField("hCounty", "");
-                                addField("hState", "");
-                                addField("hLicNbr", item.licenseNumber);
-                                addField("hAction", "");
-                                addField("hCurPage", "");
-                                addField("hTotalPages", "");
-                                addField("hTotalRecords", "");
-                                addField("hPageAction", "");
-                                addField("hDDChange", "");
-                                addField("hBoardType", "");
-                                addField("hSearchHistoric", "");
-                                addField("hRecsPerPage", "10000");
-                                // Add user fields as empty (not needed for LicNbr search)
-                                addField("FirstName", "");
-                                addField("MiddleName", "");
-                                addField("LastName", "");
-                                addField("OrgName", "");
-                                addField("Board", "26");
-                                addField("City", "");
-                                addField("County", "");
-                                addField("State", "");
-                                addField("RecsPerPage", "10000");
-                                addField("LicNbr", item.licenseNumber);
-                                addField("Search1", "Search");
-                                document.body.appendChild(form);
-                                form.submit();
-                                document.body.removeChild(form);
-                              }}
-                            >
-                              {item.name}
-                            </a>
-                          </Card.Title>
-                          <p>License Type: {item.licenseType}</p>
-                          <p>Status: {item.status}</p>
-                          <p>License #: {item.licenseNumber}</p>
-                          <p>Expires: {item.expiration}</p>
-                        </Box>
-                      ))}
-                  </Box>
+                  {result
+                    .slice(
+                      (currentPage - 1) * resultsPerPage,
+                      currentPage * resultsPerPage
+                    )
+                    .map((item, idx) => (
+                      <Box
+                        key={idx}
+                        mb={4}
+                        borderWidth={1}
+                        borderRadius="md"
+                        p={3}
+                        bg={
+                          item.status === "Active"
+                            ? "green.50"
+                            : item.status === "Null and Void"
+                            ? "red.50"
+                            : "gray.50"
+                        }
+                        maxH="150px"
+                        overflow="hidden"
+                        color="black" // Ensure text is readable on light backgrounds
+                      >
+                        <Card.Title mt="2">{item.name}</Card.Title>
+                        <p>License Type: {item.licenseType}</p>
+                        <p>Status: {item.status}</p>
+                        <p>License #: {item.licenseNumber}</p>
+                        <p>Expires: {item.expiration}</p>
+                      </Box>
+                    ))}
                   {/* Pagination Controls */}
                   <HStack justifyContent="center" mt={2}>
                     <Button

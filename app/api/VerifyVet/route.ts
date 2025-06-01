@@ -1,33 +1,57 @@
 import type { NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {
-  // Forward all query string parameters from the incoming request
-  const { search } = new URL(request.url);
-  // Read the raw form data from the request body
-  const formBody = await request.text();
+  // Parse query params from the request
+  const { searchParams } = new URL(request.url);
+  const firstName = searchParams.get("firstName") || "";
+  const lastName = searchParams.get("lastName") || "";
+  const licenseNumber = searchParams.get("licenseNumber") || "";
 
-  // Forward the request to the DBPR endpoint with all params and form data
-  const url = `https://www.myfloridalicense.com/wl11.asp${search}`;
+  // Build the form body as x-www-form-urlencoded
+  const form: Record<string, string> = {
+    hDivision: "ALL",
+    hAction: "",
+    SearchRefine: "Search",
+    hCurrPage: "1",
+    hTotalPages: "",
+    hSearchType: "Name",
+    hRecsPerPage: "1000",
+    hBoard: "26",
+  };
+  if (firstName) form.hFirstName = firstName;
+  if (lastName) form.hLastName = lastName;
+  if (licenseNumber) form.hLicense = licenseNumber;
+
+  // Convert form object to x-www-form-urlencoded string
+  const formBody = Object.entries(form)
+    .map(
+      ([key, value]) =>
+        encodeURIComponent(key) + "=" + encodeURIComponent(value)
+    )
+    .join("&");
+
+  // Query params
+  const url = "https://www.myfloridalicense.com/wl11.asp?mode=3&search=Name";
+
+  // Get cookies from the incoming request if present
+  const cookie = request.headers.get("cookie") || "";
 
   try {
     const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-        Referer: "https://www.myfloridalicense.com/wl11.asp",
-        Origin: "https://www.myfloridalicense.com",
+        ...(cookie ? { Cookie: cookie } : {}),
       },
       body: formBody,
     });
+
     const data = await response.text();
     return new Response(data, {
       headers: { "Content-Type": "text/html" },
       status: response.status,
     });
   } catch (error) {
-    // Remove unused variable warning by using the error in the response
-    return Response.json({ error: (error instanceof Error ? error.message : 'Failed to fetch data') }, { status: 500 });
+    return Response.json({ error: "Failed to fetch data" }, { status: 500 });
   }
 }
