@@ -1,10 +1,10 @@
-import type { VetResult } from "@/app/page";
+import { VetResult } from "@/app/types/vet-result";
 
-export async function verifyFlorida(
+export async function verify(
   firstName: string,
   lastName: string,
   licenseNumber: string
 ): Promise<VetResult[]> {
-  // ...Florida-specific fetch and parsing logic here...
+  // ...Alberta-specific fetch and parsing logic here...
   return [];
 }

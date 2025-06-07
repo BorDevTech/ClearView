@@ -1,14 +1,14 @@
-import * as AL from "./alabama/logic.ts";
-import * as AK from "./alaska/logic.ts";
-import * as AB from "./alberta/logic.ts";
-import * as AZ from "./arizona/logic.ts";
-import * as AR from "./arkansas/logic.ts";
-import * as BC from "./britishcolumbia/logic.ts";
-import * as CA from "./california/logic.ts";
-import * as CO from "./colorado/logic.ts";
-import * as CT from "./connecticut/logic.ts";
-import * as DE from "./delaware/logic.ts";
-import * as DC from "./districtofcolumbia/logic.ts";
-import * as FL from "./florida/logic.ts";
+import * as AL from "./alabama/logic";
+import * as AK from "./alaska/logic";
+import * as AB from "./alberta/logic";
+import * as AZ from "./arizona/logic";
+import * as AR from "./arkansas/logic";
+import * as BC from "./britishcolumbia/logic";
+import * as CA from "./california/logic";
+import * as CO from "./colorado/logic";
+import * as CT from "./connecticut/logic";
+import * as DE from "./delaware/logic";
+import * as DC from "./districtofcolumbia/logic";
+import * as FL from "./florida/logic";
 
 export { AL, AK, AB, AZ, AR, BC, CA, CO, CT, DE, DC, FL };
