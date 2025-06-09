@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 
+// POST handler to proxy the request to the real Florida DBPR site
 export async function POST(request: NextRequest) {
   // Forward all query string parameters from the incoming request
   const { search } = new URL(request.url);
@@ -27,7 +28,6 @@ export async function POST(request: NextRequest) {
       status: response.status,
     });
   } catch (error) {
-    // Remove unused variable warning by using the error in the response
     return Response.json(
       {
         error: error instanceof Error ? error.message : "Failed to fetch data",

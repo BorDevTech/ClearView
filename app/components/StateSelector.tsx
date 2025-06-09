@@ -160,6 +160,7 @@ const ListedStates = createListCollection<StateDefinition>({
     },
     { active: false, value: "WI", label: "Wisconsin" },
     { active: false, value: "WY", label: "Wyoming" },
+    { active: true, value: "XX", label: "Test" },
   ],
 });
 

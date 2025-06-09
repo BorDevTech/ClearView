@@ -61,6 +61,7 @@ const stateLogicMap: Record<string, string> = {
   WV: "westVirginia",
   WI: "wisconsin",
   WY: "wyoming",
+  XX: "test",
   // ...add the rest
 };
 
