@@ -29,19 +29,23 @@ export async function verify({
     formData.append("Search1", "Search");
   } else {
     formData.append("hSearchType", "Name");
-    formData.append("hLastName", lastName);
     formData.append("hFirstName", firstName);
+    formData.append("hLastName", lastName);
+    formData.append("hAction", "");
   }
   // ...append all other required fields as in your previous logic...
   formData.append("hCurrPage", "1");
   formData.append("hTotalPages", "");
   formData.append("hDivision", "ALL");
   // formData.append("hBoard", "210");
-  formData.append("LicenseType", "2601");
+  // formData.append("LicenseType", "2601");
   formData.append("hBoard", "26");
   formData.append("hRecsPerPage", "10000");
 
   // Call your Next.js API route (which proxies to the real DBPR site)
+  console.log("Outgoing query params:", queryParams.toString());
+  console.log("Outgoing form data:", formData.toString());
+
   const res = await fetch(`/api/verify/florida/?${queryParams.toString()}`, {
     method: "POST",
     headers: {
@@ -64,10 +68,16 @@ export async function verify({
       .replace(/<br\s*\/?>/gi, ",")
       .replace(/<[^>]+>/g, "")
       .replace(/\s+/g, " ")
-      .trim();
+      .trim(); // // Extract and clean the license type cell
+    // const licenseTypeCell = tdMatches[0][1]
+    //   .split(/<br\s*\/?>/i)[0] // Take only the part before <br>
+    //   .replace(/<[^>]+>/g, "") // Remove any remaining HTML tags
+    //   .replace(/\s+/g, " ") // Normalize whitespace
+    //   .trim();
     // Only keep rows where status contains "Current, Active" (case-insensitive)
     return /current\s*,\s*active/i.test(statusCell);
   });
+  console.log("HTML response snippet:", html.slice(0, 1000));
 
   const results: VetResult[] = rows
     .map((row) => {
@@ -79,12 +89,6 @@ export async function verify({
         ? nameMatch[1].trim()
         : nameTd.replace(/<[^>]+>/g, "").trim();
 
-      // // Extract and clean the license type cell
-      const licenseTypeCell = tdMatches[0][1]
-        .split(/<br\s*\/?>/i)[0] // Take only the part before <br>
-        .replace(/<[^>]+>/g, "") // Remove any remaining HTML tags
-        .replace(/\s+/g, " ") // Normalize whitespace
-        .trim();
       // // Extract and clean the license number cell
       const licenseNumberCell = tdMatches[3][1]
         .split(/<br\s*\/?>/i)[0] // Take only the part before <br>
@@ -114,12 +118,10 @@ export async function verify({
       if (!name || !expiration) return null;
       return {
         name,
-        licenseNumber: isLicenseNumberSearch
-          ? licenseNumber
-          : licenseNumberCell,
+        licenseNumber: licenseNumberCell,
         status,
         expiration,
-        licenseType: licenseTypeCell,
+        licenseType: "",
       };
     })
     .filter(Boolean) as VetResult[];
