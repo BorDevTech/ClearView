@@ -15,106 +15,74 @@ export async function verify({
 
   // Build query params and form data
   const queryParams = new URLSearchParams({
-    mode: isLicenseNumberSearch ? "2" : "3",
-    search: isLicenseNumberSearch ? "LicNbr" : "Name",
-    SID: "",
-    brd: "",
-    typ: "",
+    sobi2Search: isLicenseNumberSearch
+      ? licenseNumber
+      : `${firstName + " " + lastName}`.trim(),
+    searchphrase: "any",
+    option: "com_sobi2",
+    Itemid: "0",
+    no_html: "1",
+    sobi2Task: "axSearch",
+    sobiCid: "0",
+    SobiSearchPage: "0",
   });
-  const formData = new URLSearchParams();
-  if (isLicenseNumberSearch) {
-    formData.append("sobi2Search", licenseNumber);
-  } else {
-    formData.append("sobi2Search", firstName + " " + lastName);
-  }
-  formData.append("searchphrase", "any");
-  formData.append("option", "com_sobi2");
-  formData.append("sobi2Task", "axSearch");
+
   // ...append all other required fields as in your previous logic...
 
   // Call your Next.js API route (which proxies to the real DBPR site)
   console.log("Outgoing query params:", queryParams.toString());
-  console.log("Outgoing form data:", formData.toString());
 
   const res = await fetch(`/api/verify/newmexico/?${queryParams.toString()}`, {
-    method: "POST",
+    method: "GET",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: formData.toString(),
   });
   console.log("API response status:", res);
   if (!res.ok) throw new Error("Failed to fetch");
   const html = await res.text();
 
   // --- Parsing logic (as in your page.tsx) ---
-  const rows = (html.match(/<tr[\s\S]*?<\/tr>/gi) || []).filter((row) => {
-    // Find the fifth <td> in the row
-    const tdMatches = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
-    if (tdMatches.length < 7) return false;
+  const innerTableMatch = html.match(
+    /<table[^>]*bgcolor="#ffffff"[\s\S]*?<\/table>/i
+  );
+  if (!innerTableMatch) return [];
 
-    // Extract and clean the status cell
-    const statusCell = tdMatches[2][1]
-      .replace(/<span\s*\/?>/gi, ",")
-      .replace(/<[^>]+>/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
-    // // Extract and clean the license type cell
-    // const licenseTypeCell = tdMatches[0][1]
-    //   .split(/<br\s*\/?>/i)[0] // Take only the part before <br>
-    //   .replace(/<[^>]+>/g, "") // Remove any remaining HTML tags
-    //   .replace(/\s+/g, " ") // Normalize whitespace
-    //   .trim();
-    // Only keep rows where status contains "Current, Active" (case-insensitive)
-    return /current\s*,\s*active/i.test(statusCell);
-  });
-  console.log("HTML response snippet:", html.slice(0, 1000));
+  const innerTable = innerTableMatch[0];
 
-  const results: VetResult[] = rows
-    .map((row) => {
+  // Get all <tr> rows inside the inner table
+  const rows = [...innerTable.matchAll(/<tr>([\s\S]*?)<\/tr>/gi)];
+
+  // The first row is the header, so skip it
+  const dataRows = rows.slice(1);
+
+  const results: VetResult[] = dataRows
+    .map((rowMatch) => {
+      const row = rowMatch[1];
       const tdMatches = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
-      if (tdMatches.length < 5) return null;
-      const nameTd = tdMatches[1][1];
-      const nameMatch = nameTd.match(/<a[^>]*>([^<]+)<\/a>/i);
-      const name = nameMatch
-        ? nameMatch[1].trim()
-        : nameTd.replace(/<[^>]+>/g, "").trim();
+      if (tdMatches.length < 7) return null;
 
-      // // Extract and clean the license number cell
-      const licenseNumberCell = tdMatches[3][1]
-        .split(/<br\s*\/?>/i)[0] // Take only the part before <br>
-        .replace(/<[^>]+>/g, "") // Remove any remaining HTML tags
-        .replace(/\s+/g, " ") // Normalize whitespace
-        .trim();
+      const licenseNumber = tdMatches[0][1].replace(/<[^>]+>/g, "").trim();
+      const licenseType = tdMatches[1][1].replace(/<[^>]+>/g, "").trim();
+      const statusRaw = tdMatches[2][1].replace(/<[^>]+>/g, "").trim();
+      const status = statusRaw === "AC" ? "Current, Active" : statusRaw;
+      const name = tdMatches[3][1].replace(/<[^>]+>/g, "").trim();
+      const location = tdMatches[4][1].replace(/<[^>]+>/g, "").trim();
+      const issued = tdMatches[5][1].replace(/<[^>]+>/g, "").trim();
+      const expiration = tdMatches[6][1].replace(/<[^>]+>/g, "").trim();
 
-      // Extract and clean the status cell
-      const statusExpRaw = tdMatches[4][1]
-        .replace(/<br\s*\/?>/gi, ",")
-        .replace(/<[^>]+>/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
-
-      let status = "";
-      let expiration = "";
-
-      if (/current/i.test(statusExpRaw) && /active/i.test(statusExpRaw)) {
-        status = "Current, Active";
-        const dateMatch = statusExpRaw.match(/Active,\s*([0-9/]+)/i);
-        expiration = dateMatch ? dateMatch[1].trim() : "";
-      } else {
-        const parts = statusExpRaw.split(",");
-        status = parts[0] ? parts[0].trim() : "";
-        expiration = parts[1] ? parts[1].trim() : "";
-      }
       if (!name || !expiration) return null;
       return {
         name,
-        licenseNumber: licenseNumberCell,
+        licenseNumber,
         status,
         expiration,
-        licenseType: "",
+        licenseType,
+        location,
+        issued,
       };
     })
     .filter(Boolean) as VetResult[];
+
   return results;
 }
