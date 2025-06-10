@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0",
         Referer: "https://licensesearch.alabama.gov/ASBVME",
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        Origin: "https://licensesearch.alabama.gov/ASBVME",
+        Accept: "*/*",
         "Accept-Language": "en-US,en;q=0.9",
         "Accept-Encoding": "gzip, deflate, br, zstd",
         "Cache-Control": "max-age=0",
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     });
     const data = await response.text();
     return new Response(data, {
-      headers: { "Content-Type": "text/html; charset=utf-8" },
+      headers: { "Content-Type": "text/html" },
       status: response.status,
     });
   } catch (error) {

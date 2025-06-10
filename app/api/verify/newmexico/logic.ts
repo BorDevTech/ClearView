@@ -50,16 +50,23 @@ export async function verify({
 
   const innerTable = innerTableMatch[0];
 
-  // Get all <tr> rows inside the inner table
-  const rows = [...innerTable.matchAll(/<tr>([\s\S]*?)<\/tr>/gi)];
+  // Find the nested table inside the innerTable
+  const nestedTableMatch = innerTable.match(/<table[^>]*>([\s\S]*?)<\/table>/i);
+  if (!nestedTableMatch) return [];
+
+  const nestedTable = nestedTableMatch[0];
+
+  // Get all <tr> rows inside the nested table
+  const rows = [...nestedTable.matchAll(/<tr>([\s\S]*?)<\/tr>/gi)];
 
   // The first row is the header, so skip it
-  const dataRows = rows.slice(1);
+  if (rows.length < 2) return [];
 
-  const results: VetResult[] = dataRows
+  const results: VetResult[] = rows
+    .slice(1)
     .map((rowMatch) => {
-      const row = rowMatch[1];
-      const tdMatches = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
+      const dataRow = rowMatch[1];
+      const tdMatches = [...dataRow.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
       if (tdMatches.length < 7) return null;
 
       const licenseNumber = tdMatches[0][1].replace(/<[^>]+>/g, "").trim();
@@ -82,7 +89,12 @@ export async function verify({
         issued,
       };
     })
-    .filter(Boolean) as VetResult[];
+    .filter(
+      (result) =>
+        result &&
+        (/current\s*,\s*active/i.test(result.status) ||
+          /^AC$/i.test(result.status))
+    ) as VetResult[];
 
   return results;
 }
