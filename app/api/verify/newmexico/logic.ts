@@ -19,19 +19,19 @@ export async function verify({
   // const isLicenseNumberSearch = licenseNumber && licenseNumber.trim() !== "";
 
   // // Build query params and form data
-  // const queryParams = new URLSearchParams({
-  //   EntityType: "I",
-  //   FirstName: firstName,
-  //   LastName: lastName,
-  //   DBAName: "",
-  //   LicenseNumber: licenseNumber,
-  //   SortDirection: "ASC",
-  //   PageSize: "10000",
-  //   SortColumn: "Default",
-  //   firstRecord: "0",
-  //   PageNumber: "0",
-  //   IsPagedData: "1",
-  // });
+  const queryParams = new URLSearchParams({
+    EntityType: "I",
+    FirstName: firstName,
+    LastName: lastName,
+    DBAName: "",
+    LicenseNumber: licenseNumber,
+    SortDirection: "ASC",
+    PageSize: "10000",
+    SortColumn: "Default",
+    firstRecord: "0",
+    PageNumber: "0",
+    IsPagedData: "1",
+  });
 
   // ...append all other required fields as in your previous logic...
 
@@ -39,7 +39,7 @@ export async function verify({
   // console.log("Outgoing query params:", queryParams.toString());
 
   const res = await fetch(
-    `https://ws.bvm.nm.gov/api/public/DataAccess/publicLicenseSearch/Public/?EntityType=I&FirstName=ann&LastName=&DBAName=&LicenseNumber=&SortDirection=ASC&PageSize=50&SortColumn=Default&firstRecord=0&PageNumber=0&IsPagedData=1`
+    `/api/verify/newmexico/?${queryParams.toString()}`
   );
   console.log("API response status:", res);
   if (!res.ok) throw new Error("Failed to fetch");
