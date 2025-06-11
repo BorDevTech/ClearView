@@ -85,7 +85,7 @@ const ListedStates = createListCollection<StateDefinition>({
       label: "New Hampshire",
     },
     { active: false, value: "NJ", label: "New Jersey" },
-    { active: false, value: "NM", label: "New Mexico" },
+    { active: true, value: "NM", label: "New Mexico" },
     { active: false, value: "NY", label: "New York" },
     {
       active: false,
