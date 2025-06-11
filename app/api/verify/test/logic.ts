@@ -11,14 +11,17 @@ export async function verify({
   licenseNumber: string;
 }): Promise<VetResult[]> {
   // Use the raw.githubusercontent.com URL to fetch the actual file content
-  const url = "https://raw.githubusercontent.com/BorDevTech/ClearView/main/package.json";
+  const url =
+    "https://mydatcp.wi.gov/documents/dah/VEBRegistries_VeterinarianLicense.pdf";
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch package.json from GitHub");
-  const data = await res.json();
-  // For demonstration, return the package name as a mock VetResult
+  // Get the PDF as an ArrayBuffer (binary data)
+  const pdfBuffer = await res.arrayBuffer();
+
+  // For demonstration, just return the size of the PDF as the "name"
   return [
     {
-      name: data.scripts.dev || "No Name",
+      name: `PDF size: ${pdfBuffer.byteLength} bytes`,
       licenseNumber: "",
       status: "",
       expiration: "",
