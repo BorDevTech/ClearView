@@ -130,9 +130,15 @@ export default function Home() {
           <Box flex="1">
             <Card.Root width="100%">
               <Card.Body gap="2">
-                <Center>
+                <Stack justifyContent={"center"} alignItems={"center"}>
+                  <Card.Title>Select a State to Begin</Card.Title>
+                  <Card.Description>
+                    Choose a state from the dropdown to access their official
+                    veterinary licensing board.
+                  </Card.Description>
+
                   <Card.Title>Results</Card.Title>
-                </Center>
+                </Stack>
                 {error && <Box color="red.500">{error}</Box>}
                 {Array.isArray(result) && result.length > 0 && (
                   <>
