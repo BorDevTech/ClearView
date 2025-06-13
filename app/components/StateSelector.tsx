@@ -26,7 +26,7 @@ const ListedStates = createListCollection<StateDefinition>({
     { active: false, value: "AK", label: "Alaska" },
     { active: false, value: "AB", label: "Alberta" },
     { active: false, value: "AZ", label: "Arizona" },
-    { active: false, value: "AR", label: "Arkansas" },
+    { active: true, value: "AR", label: "Arkansas" },
     {
       active: false,
       value: "BC",

@@ -170,7 +170,6 @@ export default function Home() {
                             boxShadow="sm"
                           >
                             <Card.Title mt="2">{item.name}</Card.Title>
-                            <p>License Type: {item.licenseType}</p>
                             <p>Status: {item.status}</p>
                             <p>License #: {item.licenseNumber}</p>
                             <p>Expires: {item.expiration}</p>

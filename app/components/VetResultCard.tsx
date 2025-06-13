@@ -39,7 +39,7 @@ export function VetResultCard({ item, onNameClick }: VetResultCardProps) {
             color: "#2179b5",
             textDecoration: "underline",
           }}
-          onClick={e => {
+          onClick={(e) => {
             e.preventDefault();
             onNameClick(item.licenseNumber);
           }}
@@ -47,7 +47,6 @@ export function VetResultCard({ item, onNameClick }: VetResultCardProps) {
           {item.name}
         </a>
       </Card.Title>
-      <p>License Type: {item.licenseType}</p>
       <p>Status: {item.status}</p>
       <p>License #: {item.licenseNumber}</p>
       <p>Expires: {item.expiration}</p>
