@@ -10,6 +10,21 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
+import { Activity } from "lucide-react";
+
+import { ListedStates } from "@/app/components/StateSelector";
+
+const totalStates = ListedStates.items.length;
+
+const onlineStates = ListedStates.items.filter(
+  (state) => state.active === true
+).length;
+const offlineStates = ListedStates.items.filter(
+  (state) => state.active === false
+).length;
+const checkingStates = ListedStates.items.filter(
+  (state) => state.active === null
+).length;
 
 export function ProjectHeader({
   icon,
@@ -68,19 +83,29 @@ export function ProjectHeader({
               <Tag.Root rounded={"full"}>
                 <Status.Root>
                   <Status.Indicator colorPalette={"red"} />
-                  Offline
+                  <Icon as={Activity} color={"red"} />
+                  {offlineStates} Offline
                 </Status.Root>
               </Tag.Root>
               <Tag.Root rounded={"full"}>
                 <Status.Root>
                   <Status.Indicator colorPalette={"yellow"} />
-                  Checking
+
+                  <Icon as={Activity} color={"yellow"} />
+                  {checkingStates} Checking
                 </Status.Root>
               </Tag.Root>
               <Tag.Root rounded={"full"}>
                 <Status.Root>
                   <Status.Indicator colorPalette={"green"} />
-                  Online
+                  <Icon as={Activity} color={"green"} />
+                  {onlineStates} Online
+                </Status.Root>
+              </Tag.Root>
+              <Tag.Root rounded={"full"}>
+                <Status.Root size="lg">
+                  <Status.Indicator />
+                  {totalStates} Total Lookups
                 </Status.Root>
               </Tag.Root>
             </HStack>
