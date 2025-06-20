@@ -70,7 +70,7 @@ const ListedStates = createListCollection<StateDefinition>({
       value: "MS",
       label: "Mississippi",
     },
-    { active: false, value: "MO", label: "Missouri" },
+    { active: true, value: "MO", label: "Missouri" },
     { active: false, value: "MT", label: "Montana" },
     { active: false, value: "NE", label: "Nebraska" },
     { active: false, value: "NV", label: "Nevada" },

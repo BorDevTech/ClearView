@@ -1,0 +1,31 @@
+Currently licensed - 	This file is a tab-delimited text file. 
+			The first row contains the column names. 
+			Below is an english version of the field names and a brief description.
+
+
+Column			Datatype/Max length	Description
+prc_first_name		char(20)		First Name
+prc_middle_name		char(20)		Middle Name
+prc_last_name		char(35)		Last Name
+prc_suffix			char(10)		Suffix
+ba_address			char(35)		Contact At Address line 1
+ba_2address			char(35)		Contact At Address line 2
+ba_city				char(25)		Contact At City
+ba_state			char(2)			Contact At State
+ba_zip				char(9)			Contact At Zip Code
+ba_cnty				char(20)		Contact At County Name
+ba_cntry			char(3)			Contact At Country Abbreviation
+lic_profession		char(3)			License Profession code
+lic_number			char(11)		License Number
+lst_description		char(40)		License Status
+les_description		char(35)		License Expiration Status
+prc_dba_name		char(70)		Practitioner DBA name
+lic_orig_issue_date	char(10)		License Original Issue Date
+clas_description	char(35)		License Classification
+lic_exp_date		char(10)		License Expiration Date
+ctype_description	char(35)		Certification Type
+cl_description		char(35)		Certification Level
+prc_entity_name						Entity Name
+ld_description						Discipline Status (if available)	
+	
+		
