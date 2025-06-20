@@ -1,28 +1,30 @@
 import type { NextRequest } from "next/server";
-import { verify } from "./logic";
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const firstName = searchParams.get("firstName") || "";
-  const lastName = searchParams.get("lastName") || "";
-  const licenseNumber = searchParams.get("licenseNumber") || "";
+  const { search } = new URL(request.url);
+  const url =
+    "https://raw.githubusercontent.com/BorDevTech/ClearView/refs/heads/main/app/api/verify/missouri/VET.json" +
+    (search || "");
 
   try {
-    const results = await verify({ firstName, lastName, licenseNumber });
-    return new Response(JSON.stringify(results), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        Accept: "application/json",
+      },
+    });
+    const data = await response.text();
+    return new Response(data, {
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      status: response.status,
     });
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error:
-          error instanceof Error ? error.message : "Failed to search local data",
-      }),
+    return Response.json(
       {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+        error: error instanceof Error ? error.message : "Failed to fetch data",
+      },
+      { status: 500 }
     );
   }
 }

@@ -1,4 +1,5 @@
-import { Box, Card, HStack, Text } from "@chakra-ui/react";
+import { Stack, Card, HStack, Text, Avatar } from "@chakra-ui/react";
+import { UserRound } from "lucide-react";
 
 interface VetResult {
   name: string;
@@ -10,17 +11,21 @@ interface VetResult {
 }
 
 interface VetResultCardProps {
-  item: VetResult;
-  onNameClick: (licenseNumber: string) => void;
+  item: {
+    name: string;
+    status: string;
+    licenseNumber?: string;
+    expiration: string;
+  };
 }
 
-export function VetResultCard({ item, onNameClick }: VetResultCardProps) {
+export function VetResultCard({ item }: VetResultCardProps) {
   return (
-    <Box
+    <Stack
       mb={4}
       borderWidth={1}
       borderRadius="md"
-      p={3}
+      p={2}
       bg={
         item.status === "Active"
           ? "green.50"
@@ -29,27 +34,22 @@ export function VetResultCard({ item, onNameClick }: VetResultCardProps) {
           : "gray.50"
       }
       h="200px"
+      w="300px"
       overflow="hidden"
       color="black"
     >
-      <Card.Title mt="2">
-        <a
-          href="#"
-          style={{
-            color: "#2179b5",
-            textDecoration: "underline",
-          }}
-          onClick={(e) => {
-            e.preventDefault();
-            onNameClick(item.licenseNumber);
-          }}
-        >
-          {item.name}
-        </a>
-      </Card.Title>
-      <p>Status: {item.status}</p>
-      <p>License #: {item.licenseNumber}</p>
-      <p>Expires: {item.expiration}</p>
-    </Box>
+      <HStack>
+        <Avatar.Root borderRadius={4}>
+          <Avatar.Fallback />
+          <Avatar.Image as={UserRound} />
+        </Avatar.Root>
+        <Stack>
+          <Card.Title mt="2">{item.name}</Card.Title>
+          <p>Status: {item.status}</p>
+          <p>License #: {item.licenseNumber}</p>
+          <p>Expires: {item.expiration}</p>
+        </Stack>
+      </HStack>
+    </Stack>
   );
 }

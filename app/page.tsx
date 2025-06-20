@@ -18,6 +18,7 @@ import type { VetResult } from "./types/vet-result";
 import { Search, Shield } from "lucide-react";
 import Refinement from "./components/Project/Refinement";
 import { dynamicVerify } from "./api/verify/searchLogic";
+import { VetResultCard } from "./components/VetResultCard";
 // colors pallete #41b883 and #2179b5
 
 export default function Home() {
@@ -32,7 +33,7 @@ export default function Home() {
   useEffect(() => {
     console.log("Server State (updated):", selectedState);
   }, [selectedState]);
-  const resultsPerPage = 5; // Adjust as needed
+  const resultsPerPage = 8; // Adjust as needed
 
   const handleSearch = async () => {
     console.log("selectedState value:", selectedState, typeof selectedState);
@@ -68,14 +69,14 @@ export default function Home() {
 
   // Gradient top bar and wider layout
   return (
-    <Box minH="100vh">
+    <Stack minH="100vh">
       <ProjectHeader
         title={"ClearView - VetID"}
         icon={Shield}
         slogan={"One Portal. Every Vet. Instant Results."}
       />
       {/* Main Content */}
-      <Box maxW="1200px" mx="auto" pt={8} px={4}>
+      <Stack maxW="1200px" mx="auto" pt={8} px={4}>
         <Stack direction={["column", "row"] as any} gap={8} align="flex-start">
           {/* Search Card */}
           <Card.Root width="350px" minW="320px">
@@ -127,7 +128,7 @@ export default function Home() {
             </Card.Footer>
           </Card.Root>
           {/* Results Card */}
-          <Box flex="1">
+          <Stack flex="1">
             <Card.Root width="100%">
               <Card.Body gap="2">
                 <Stack justifyContent={"center"} alignItems={"center"}>
@@ -159,27 +160,7 @@ export default function Home() {
                           currentPage * resultsPerPage
                         )
                         .map((item, idx) => (
-                          <Box
-                            key={idx}
-                            borderWidth={1}
-                            borderRadius="md"
-                            p={4}
-                            bg={
-                              item.status === "Active"
-                                ? "green.50"
-                                : item.status === "Null and Void"
-                                ? "red.50"
-                                : "gray.50"
-                            }
-                            color="black"
-                            minH="180px"
-                            boxShadow="sm"
-                          >
-                            <Card.Title mt="2">{item.name}</Card.Title>
-                            <p>Status: {item.status}</p>
-                            <p>License #: {item.licenseNumber}</p>
-                            <p>Expires: {item.expiration}</p>
-                          </Box>
+                          <VetResultCard item={item} key={idx} />
                         ))}
                     </Box>
                     {/* Pagination Controls */}
@@ -219,9 +200,9 @@ export default function Home() {
                 )}
               </Card.Body>
             </Card.Root>
-          </Box>
+          </Stack>
         </Stack>
-      </Box>
-    </Box>
+      </Stack>
+    </Stack>
   );
 }
