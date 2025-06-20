@@ -6,6 +6,7 @@ import {
   Card,
   Portal,
 } from "@chakra-ui/react";
+import { Activity } from "lucide-react";
 import { useState } from "react";
 import { VscCircleFilled } from "react-icons/vsc";
 
@@ -15,7 +16,7 @@ interface StateDefinition {
   label: string;
 }
 
-const ListedStates = createListCollection<StateDefinition>({
+export const ListedStates = createListCollection<StateDefinition>({
   items: [
     {
       active: null,
@@ -210,7 +211,7 @@ export default function StateSelector({
                   <HStack>
                     <Icon
                       color={state.active === true ? "green.500" : "red.500"}
-                      as={VscCircleFilled}
+                      as={Activity}
                     />
                     {state.label}
                   </HStack>
