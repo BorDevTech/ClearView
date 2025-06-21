@@ -3,19 +3,16 @@ import { VetResult } from "@/app/types/vet-result";
 interface VetRecord {
   last_name: string;
   first_name: string;
-  middle_name: string;
+  status: string;
   license_number: string;
   license_expiration_date: string;
-  license_status_description: string;
   formatted_name: string;
 }
 
 function buildFullName(record: VetRecord): string {
-  const parts = [
-    record.first_name?.trim(),
-    record.middle_name?.trim(),
-    record.last_name?.trim(),
-  ].filter(Boolean);
+  const parts = [record.first_name?.trim(), record.last_name?.trim()].filter(
+    Boolean
+  );
   return parts.join(" ");
 }
 
@@ -64,7 +61,7 @@ export async function verify({
 
   return filtered.map((record) => ({
     name: record.formatted_name?.trim() || buildFullName(record),
-    status: record.license_status_description || "",
+    status: record.status || "",
     expirationDate: record.license_expiration_date,
     licenseNumber: record.license_number,
     expiration: record.license_expiration_date,

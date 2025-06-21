@@ -75,12 +75,12 @@ function convertTabDelimitedToJson(inputPath, outputPath) {
                         entry = {
                             last_name: row["LAST NAME"] || "",
                             first_name: row["FIRST NAME"] || "",
-                            middle_name: row["MIDDLE NAME"] || "",
+                            status: row["STATUS"] || "",
                             current: row["REASON"] || "",
                             license_number: row["LICENSE NO."] || "",
                             issue_date: row["ISSUE DATE"] || "",
                             expiration_date: row["EXPIRATION DATE"] || "",
-                            formatted_name: [row["FIRST NAME"], row["MIDDLE NAME"], row["LAST NAME"]].filter(Boolean).join(" ")
+                            formatted_name: [row["FIRST NAME"], row["LAST NAME"]].filter(Boolean).join(" ")
                         };
                         results.push(entry);
                     }

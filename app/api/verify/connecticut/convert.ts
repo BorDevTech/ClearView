@@ -4,7 +4,7 @@ import { parse } from "csv-parse";
 interface VetEntry {
   last_name: string;
   first_name: string;
-  middle_name: string;
+  status: string;
   current: string;
   license_number: string;
   issue_date: string;
@@ -30,7 +30,7 @@ async function convertTabDelimitedToJson(
     const entry: VetEntry = {
       last_name: row["LAST NAME"] || "",
       first_name: row["FIRST NAME"] || "",
-      middle_name: row["MIDDLE NAME"] || "",
+      status: row["STATUS"] || "",
       current: row["REASON"] || "",
       license_number: row["LICENSE NO."] || "",
       issue_date: row["ISSUE DATE"] || "",
