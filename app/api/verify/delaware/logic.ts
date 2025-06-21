@@ -46,9 +46,15 @@ export async function verify({
   const responseData = await res.json();
 
   const allRecords = responseData[0]?.result?.v || [];
-  allRecords.forEach((item) => console.log(item.Status));
-  const records = allRecords.filter(
-    (item) => (item.Status || "").trim().toLowerCase() === "active"
+  interface DelawareLicenseRecord {
+    Status: string;
+    Name: string;
+    RecNumber: string;
+  }
+
+    allRecords.forEach((item: DelawareLicenseRecord) => console.log(item.Status));
+  const records: DelawareLicenseRecord[] = allRecords.filter(
+    (item: DelawareLicenseRecord) => (item.Status || "").trim().toLowerCase() === "active"
   );
 
   return records.map((item) => ({
