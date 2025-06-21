@@ -14,15 +14,10 @@ interface VetRecord {
 
 function buildFullName(record: VetRecord): string {
   const parts = [
-    record.last_name?.trim(),
     record.first_name?.trim(),
     record.middle_name?.trim(),
+    record.last_name?.trim(),
     record.suffix?.trim(),
-    record.license_number?.trim(),
-    record.license_expiration_date?.trim(),
-    record.license_status_description?.trim(),
-    record.title?.trim(),
-    record.formatted_name?.trim(),
   ].filter(Boolean);
   return parts.join(" ");
 }
@@ -42,7 +37,7 @@ export async function verify({
     lastname: lastName || "",
   });
 
-  const res = await fetch(`/api/verify/missouri?${queryParams.toString()}`);
+  const res = await fetch(`/api/verify/colorado?${queryParams.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch VET.json from GitHub");
 
   const data: VetRecord[] = await res.json();
@@ -71,10 +66,10 @@ export async function verify({
   });
 
   return filtered.map((record) => ({
-    name: buildFullName(record),
-    licenseNumber: record.license_number,
-    expirationDate: record.license_expiration_date,
+    name: record.formatted_name?.trim() || buildFullName(record),
     status: record.license_status_description || "",
+    expirationDate: record.license_expiration_date,
+    licenseNumber: record.license_number,
     expiration: record.license_expiration_date,
   }));
 }

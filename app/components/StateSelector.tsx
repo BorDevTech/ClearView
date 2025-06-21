@@ -34,7 +34,7 @@ export const ListedStates = createListCollection<StateDefinition>({
       label: "British Columbia",
     },
     { active: false, value: "CA", label: "California" },
-    { active: false, value: "CO", label: "Colorado" },
+    { active: true, value: "CO", label: "Colorado" },
     {
       active: false,
       value: "CT",
