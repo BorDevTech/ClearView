@@ -5,7 +5,7 @@ interface VetRecord {
   first_name: string;
   status: string;
   license_number: string;
-  license_expiration_date: string;
+  expiration_date: string;
   formatted_name: string;
 }
 
@@ -62,8 +62,8 @@ export async function verify({
   return filtered.map((record) => ({
     name: record.formatted_name?.trim() || buildFullName(record),
     status: record.status || "",
-    expirationDate: record.license_expiration_date,
+    expirationDate: record.expiration_date,
     licenseNumber: record.license_number,
-    expiration: record.license_expiration_date,
+    expiration: record.expiration_date,
   }));
 }
