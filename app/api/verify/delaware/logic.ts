@@ -45,26 +45,28 @@ export async function verify({
 
   const responseData = await res.json();
 
-  const allRecords = responseData[0]?.result?.v || [];
-  interface DelawareLicenseRecord {
-    Status: string;
-    Name: string;
-    RecNumber: string;
+  interface DelawareVet {
+    Status?: string;
+    Name?: string;
+    RecNumber?: string;
+    // ...other fields as needed
   }
 
-    allRecords.forEach((item: DelawareLicenseRecord) => console.log(item.Status));
-  const records: DelawareLicenseRecord[] = allRecords.filter(
-    (item: DelawareLicenseRecord) => (item.Status || "").trim().toLowerCase() === "active"
+  const allRecords: DelawareVet[] = responseData[0]?.result?.v || [];
+  allRecords.forEach((item) => console.log(item.Status));
+  const records = allRecords.filter(
+    (item) => (item.Status || "").trim().toLowerCase() === "active"
   );
 
+  // Note: issuedDate, expirationDate, and expiration are not present in the Delaware response.
   return records.map((item) => ({
     name: item.Name || "",
     licenseNumber: item.RecNumber || "",
-    issuedDate: "", // Not present in response, fill if available
-    expirationDate: "", // Not present in response, fill if available
+    issuedDate: null, // Not present in response, fill if available
+    expirationDate: null, // Not present in response, fill if available
     status: item.Status || "",
-    detailsUrl: "",
-    reportUrl: "",
-    expiration: "", // Not present in response, fill if available
+    detailsUrl: null,
+    reportUrl: null,
+    expiration: "", // Not present in response, using empty string instead of null
   }));
 }
