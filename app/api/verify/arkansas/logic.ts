@@ -21,8 +21,17 @@ export async function verify({
   if (!res.ok) throw new Error("Failed to fetch");
   const data = await res.json();
 
+  // Define a type for Arkansas license items
+  type ArkansasLicenseItem = {
+    licensee: string;
+    lastName?: string;
+    licenseNumber: string;
+    status?: string;
+    lType?: string;
+  };
+
   // Filter for DVMs and search params
-  const filtered = (data.data || []).filter((item: any) => {
+  const filtered = (data.data || []).filter((item: ArkansasLicenseItem) => {
     if (!item) return false;
     const plainName = item.licensee?.replace(/<[^>]+>/g, "") || "";
     const isDVM = /DVM/i.test(plainName);
@@ -37,15 +46,6 @@ export async function verify({
       : true;
     return isDVM && matchesFirst && matchesLast && matchesLicense;
   });
-
-  // Define a type for Arkansas license items
-  type ArkansasLicenseItem = {
-    licensee: string;
-    lastName?: string;
-    licenseNumber: string;
-    status?: string;
-    lType?: string;
-  };
 
   // Fetch expiration date for each license in parallel
   const results = await Promise.all(

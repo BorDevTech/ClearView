@@ -78,7 +78,7 @@ export default function Home() {
       />
       {/* Main Content */}
       <Stack maxW="1200px" mx="auto" pt={8} px={4}>
-        <Stack direction={["column", "row"] as any} gap={8} align="flex-start">
+        <Stack direction={["column", "row"] as ["column", "row"]} gap={8} align="flex-start">
           {/* Search Card */}
           <Card.Root width="350px" minW="320px">
             <Card.Body gap="2">

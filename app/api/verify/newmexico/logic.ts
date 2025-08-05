@@ -52,7 +52,7 @@ export async function verify({
     Status?: string;
     Expiration?: string;
     LicenseTypeName?: string;
-    [key: string]: any;
+    // Removed index signature for better type safety
   };
 
   const filtered = data.Data.filter(
