@@ -1,8 +1,5 @@
 import { VetResult } from "@/app/types/vet-result";
 
-interface NMVetRecord {
-  licenseTypeName: string;
-}
 
 export async function verify({
   firstName,
@@ -41,19 +38,32 @@ export async function verify({
   const res = await fetch(
     `/api/verify/newmexico/?${queryParams.toString()}`
   );
-  console.log("API response status:", res);
+  console.log("API response status:", res.status, res.statusText);
   if (!res.ok) throw new Error("Failed to fetch");
   const data = await res.json();
 
+  if (!data || !Array.isArray(data.Data)) {
+    throw new Error("Invalid response format: missing Data array");
+  }
+
+  type VetDataItem = {
+    Name?: string;
+    LicenseNumber?: string;
+    Status?: string;
+    Expiration?: string;
+    LicenseTypeName?: string;
+    [key: string]: any;
+  };
+
   const filtered = data.Data.filter(
-    (item: any) => item.LicenseTypeName === "Doctor of Veterinary Medicine"
+    (item: VetDataItem) => item.LicenseTypeName === "Doctor of Veterinary Medicine"
   );
 
-  return filtered.map((Vet: any) => ({
-    name: Vet.Name,
-    licenseNumber: Vet.LicenseNumber,
-    status: "",
-    expiration: "",
-    licenseType: "",
+  return filtered.map((Vet: VetDataItem) => ({
+    name: Vet.Name || "",
+    licenseNumber: Vet.LicenseNumber || "",
+    status: Vet.Status || "",
+    expiration: Vet.Expiration || "",
+    licenseType: Vet.LicenseTypeName || "",
   })); // This will be the raw JSON result
 }

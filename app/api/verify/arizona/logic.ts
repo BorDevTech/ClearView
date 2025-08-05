@@ -1,9 +1,9 @@
 import { VetResult } from "@/app/types/vet-result";
 
 export async function verify(
-  firstName: string,
-  lastName: string,
-  licenseNumber: string
+  // firstName: string,
+  // lastName: string,
+  // licenseNumber: string
 ): Promise<VetResult[]> {
   // ...Arizona-specific fetch and parsing logic here...
   return [];

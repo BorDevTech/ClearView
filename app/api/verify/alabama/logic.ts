@@ -1,7 +1,7 @@
 import { VetResult } from "@/app/types/vet-result";
 
 export async function verify({
-  firstName,
+  // firstName,
   lastName,
   licenseNumber,
 }: {

@@ -53,7 +53,7 @@ async function convertTabDelimitedToJson(
 }
 
 // Example usage
-// convertTabDelimitedToJson(
-//   'e:\\GitHub\\ClearView\\ClearView\\app\\api\\verify\\missouri\\VET.TXT',
-//   'e:\\GitHub\\ClearView\\ClearView\\app\\api\\verify\\missouri\\VET.json'
-// );
+convertTabDelimitedToJson(
+  'e:\\GitHub\\ClearView\\ClearView\\app\\api\\verify\\missouri\\VET.TXT',
+  'e:\\GitHub\\ClearView\\ClearView\\app\\api\\verify\\missouri\\VET.json'
+);

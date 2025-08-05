@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   Card,
-  Center,
   Heading,
   HStack,
   Icon,
@@ -51,10 +50,12 @@ export default function Home() {
       setError(
         results.length === 0 ? "No valid license found or parse error" : null
       );
-    } catch (err: any) {
-      setError(
-        err.message || " Verification function not found for this state. "
-      );
+    } catch (err: unknown) {
+      let message = "Verification function not found for this state.";
+      if (err instanceof Error) {
+        message = err.message;
+      }
+      setError(message);
     } finally {
       setLoading(false);
       console.log("Search completed", {
@@ -183,7 +184,7 @@ export default function Home() {
                         onClick={() =>
                           setCurrentPage((p) =>
                             p <
-                            Math.ceil((result?.length ?? 0) / resultsPerPage)
+                              Math.ceil((result?.length ?? 0) / resultsPerPage)
                               ? p + 1
                               : p
                           )

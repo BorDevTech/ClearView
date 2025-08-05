@@ -1,14 +1,14 @@
-import { Stack, Card, HStack, Text, Avatar } from "@chakra-ui/react";
+import { Stack, Card, HStack,   Avatar } from "@chakra-ui/react";
 import { UserRound } from "lucide-react";
 
-interface VetResult {
-  name: string;
-  licenseNumber: string;
-  status: string;
-  expiration: string;
-  licenseType: string;
-  address?: string;
-}
+// interface VetResult {
+//   name: string;
+//   licenseNumber: string;
+//   status: string;
+//   expiration: string;
+//   licenseType: string;
+//   address?: string;
+// }
 
 interface VetResultCardProps {
   item: {

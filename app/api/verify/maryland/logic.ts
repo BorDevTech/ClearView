@@ -24,8 +24,15 @@ export async function verify(
   // Defensive: check for expected structure
   if (!data.entries || !Array.isArray(data.entries)) return [];
 
+  // Define a type for the Maryland API response entry
+  type MarylandEntry = {
+    view_data?: {
+      content_element_data?: { [key: string]: string };
+    };
+  };
+
   // Map Maryland's JSON structure to VetResult[]
-  const results: VetResult[] = data.entries.map((entry: any) => {
+  const results: VetResult[] = data.entries.map((entry: MarylandEntry) => {
     // Extract name and status from view_data.content_element_data
     const content = entry.view_data?.content_element_data || {};
     // Get the first key for name, second for status (as in your screenshot)

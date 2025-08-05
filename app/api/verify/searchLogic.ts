@@ -17,7 +17,7 @@ const stateLogicMap: Record<string, string> = {
   IL: "illinois",
   IN: "indiana",
   IA: "iowa",
-  KS: "kansa",
+  KS: "kansas",
   KY: "kentucky",
   LA: "louisiana",
   ME: "maine",
@@ -45,7 +45,7 @@ const stateLogicMap: Record<string, string> = {
   ON: "ontario",
   OR: "oregon",
   PA: "pennsylvania",
-  PE: "princeEdwardisland",
+  PE: "princeedwardisland",
   PR: "puertorico",
   QC: "quebec",
   RI: "rhodeisland",
@@ -67,7 +67,7 @@ const stateLogicMap: Record<string, string> = {
 
 export async function dynamicVerify(
   selectedState: string,
-  params: Record<string, any>
+  params: Record<string, unknown>
 ) {
   const stateKey = selectedState.toUpperCase();
   console.log("dynamicVerify called with stateKey:", stateKey);

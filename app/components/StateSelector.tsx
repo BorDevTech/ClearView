@@ -7,8 +7,6 @@ import {
   Portal,
 } from "@chakra-ui/react";
 import { Activity } from "lucide-react";
-import { useState } from "react";
-import { VscCircleFilled } from "react-icons/vsc";
 
 interface StateDefinition {
   active: boolean | null;
@@ -185,7 +183,7 @@ export default function StateSelector({
       <Select.Root
         multiple={false}
         collection={ListedStates}
-        defaultValue={["No_Selection"]}
+        value={[selectedState]}
         onValueChange={(value) => {
           setSelectedState(value?.items[0]?.value);
         }}

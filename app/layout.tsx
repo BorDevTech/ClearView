@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+import {Analytics }from "@vercel/analytics/react";
 import Script from "next/script";
 import "./globals.css";
 import { Provider } from "../components/ui/provider";
@@ -23,6 +25,7 @@ export default function RootLayout({
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "sq8dhiettj");`}
         </Script>
+        <Analytics />
       </head>
       <body>
         <Provider>{children}</Provider>
