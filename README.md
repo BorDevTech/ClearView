@@ -22,7 +22,7 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-TBD Price Point: $95/Month for Commerical License, $48/Month for Individual License.
+TBD Price Point: structured Annually for Commerical License, monthly for Individual License.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
