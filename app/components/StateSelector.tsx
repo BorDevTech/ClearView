@@ -21,11 +21,11 @@ export const ListedStates = createListCollection<StateDefinition>({
       value: "No_Selection",
       label: "Select a State",
     },
-    { active: false, value: "AL", label: "Alabama" },
+    { active: true, value: "AL", label: "Alabama" },
     { active: false, value: "AK", label: "Alaska" },
     { active: false, value: "AB", label: "Alberta" },
     { active: false, value: "AZ", label: "Arizona" },
-    { active: true, value: "AR", label: "Arkansas" },
+    { active: null, value: "AR", label: "Arkansas" },
     {
       active: false,
       value: "BC",
