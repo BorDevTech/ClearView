@@ -57,7 +57,7 @@ const records: VetEntry[] = filteredRecords.map((entry: any) => ({
 }));
 
 // Write to JSON
-const outputPath = path.join(__dirname, "alaskaVets.json");
+const outputPath = path.join(__dirname, "../data/alaskaVets.json");
 fs.writeFileSync(outputPath, JSON.stringify(records, null, 2));
 
 console.log("✅ Conversion complete. JSON saved to alaskaVets.json.");
