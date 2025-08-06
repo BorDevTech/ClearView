@@ -9,9 +9,9 @@ interface VetEntry {
   DBA: string;
   Owners: string;
   Status: string;
-  DateIssued: Date | null;
-  DateEffective: Date | null;
-  DateExpired: Date | null;
+  DateIssued: Date;
+  DateEffective: Date;
+  DateExpired: Date;
   ADDRESS1: string;
   ADDRESS2: string;
   CITY: string;
@@ -30,8 +30,12 @@ const rawRecords = parse(csvContent, {
 // ✅ Log how many lines were detected
 console.log(`📄 Detected ${rawRecords.length} CSV lines.`);
 
+type RawVetEntry = {
+  [key: string]: string;
+};
+
 // ✅ Filter for Veterinary + Veterinarian only
-const filteredRecords = rawRecords.filter((entry: any) =>
+const filteredRecords = rawRecords.filter((entry: RawVetEntry) =>
   entry["Program"]?.trim() === "Veterinary" &&
   entry["ProfType"]?.trim() === "Veterinarian"
 );
@@ -39,25 +43,25 @@ const filteredRecords = rawRecords.filter((entry: any) =>
 console.log(`🩺 Found ${filteredRecords.length} veterinarian records of ${rawRecords.length} total records.`);
 
 // Transform to VetEntry[]
-const records: VetEntry[] = filteredRecords.map((entry: any) => ({
+const records: VetEntry[] = filteredRecords.map((entry: RawVetEntry) => ({
   Program: entry["Program"],
   ProfType: entry["ProfType"],
   LicenseNum: entry["LicenseNum"],
   DBA: entry["DBA"],
   Owners: entry["Owners"],
   Status: entry["Status"],
-  DateIssued: entry["DateIssued"] ? new Date(entry["DateIssued"]) : null,
-  DateEffective: entry["DateEffective"] ? new Date(entry["DateEffective"]) : null,
-  DateExpired: entry["DateExpired"] ? new Date(entry["DateExpired"]) : null,
+  DateIssued: new Date(entry["DateIssued"]),
+  DateEffective: new Date(entry["DateEffective"]),
+  DateExpired: new Date(entry["DateExpired"]),
   ADDRESS1: entry["ADDRESS1"],
   ADDRESS2: entry["ADDRESS2"],
   CITY: entry["CITY"],
   STATE: entry["STATE"],
-  ZIP: entry["ZIP"] ? entry["ZIP"].toString() : "",
+  ZIP: parseInt(entry["ZIP"], 10),
 }));
 
 // Write to JSON
-const outputPath = path.join(__dirname, "../data/alaskaVets.json");
+const outputPath = path.join(__dirname, "alaskaVets.json");
 fs.writeFileSync(outputPath, JSON.stringify(records, null, 2));
 
 console.log("✅ Conversion complete. JSON saved to alaskaVets.json.");

@@ -10,6 +10,24 @@ export async function verify({
   licenseNumber: string;
 }): Promise<VetResult[]> {
   console.log("Alaska Loaded");
+  
+  type RawVetEntry = {
+  Program: string;
+  ProfType: string;
+  LicenseNum: string;
+  DBA: string;
+  Owners: string;
+  Status: string;
+  DateIssued: string;
+  DateEffective: string;
+  DateExpired: string;
+  ADDRESS1: string;
+  ADDRESS2: string;
+  CITY: string;
+  STATE: string;
+  ZIP: string;
+};
+
 
   const res = await fetch("/api/verify/alaska", {
     method: "GET",
@@ -18,11 +36,7 @@ export async function verify({
   if (!res.ok) throw new Error("Failed to fetch Alaska data");
   const rawData = await res.json();
 
-  if (!Array.isArray(rawData)) {
-    throw new Error("Alaska API response is not an array");
-  }
-
-  const filtered = rawData.filter((entry: any) => {
+  const filtered = rawData.filter((entry: RawVetEntry) => {
     const isVet = entry.Program?.trim() === "Veterinary" && entry.ProfType?.trim() === "Veterinarian";
 
     if (!isVet) return false;
@@ -40,24 +54,13 @@ export async function verify({
     return matchesLicense && matchesName;
   });
 
-  const results: VetResult[] = filtered.map((entry: any) => ({
-    name: typeof entry.DBA === "string"
-      ? entry.DBA
-      : typeof entry.Owners === "string"
-      ? entry.Owners
-      : "Unknown",
-    licenseNumber: typeof entry.LicenseNum === "string"
-      ? entry.LicenseNum.trim()
-      : "",
-    status: typeof entry.Status === "string"
-      ? entry.Status.trim()
-      : "",
-    expiration: entry.DateExpired
-      ? entry.DateExpired.toString()
-      : "",
-    // Optional properties can be added if needed
-    // zip: entry.ZIP ? Number(entry.ZIP) : undefined,
-    // licenseType: entry.ProfType?.trim(),
+  const results: VetResult[] = filtered.map((entry: RawVetEntry) => ({
+    name: entry.DBA || entry.Owners || "Unknown",
+    licenseNumber: entry.LicenseNum?.trim(),
+    status: entry.Status?.trim(),
+    issued: entry.DateIssued ? new Date(entry.DateIssued) : null,
+    expires: entry.DateExpired ? new Date(entry.DateExpired) : null,
+    location: `${entry.CITY}, ${entry.STATE} ${entry.ZIP}`.trim(),
   }));
 
   return results;
