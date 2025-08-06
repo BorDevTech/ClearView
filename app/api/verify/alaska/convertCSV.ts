@@ -9,9 +9,9 @@ interface VetEntry {
   DBA: string;
   Owners: string;
   Status: string;
-  DateIssued: Date;
-  DateEffective: Date;
-  DateExpired: Date;
+  DateIssued: Date | null;
+  DateEffective: Date | null;
+  DateExpired: Date | null;
   ADDRESS1: string;
   ADDRESS2: string;
   CITY: string;
@@ -46,14 +46,14 @@ const records: VetEntry[] = filteredRecords.map((entry: any) => ({
   DBA: entry["DBA"],
   Owners: entry["Owners"],
   Status: entry["Status"],
-  DateIssued: new Date(entry["DateIssued"]),
-  DateEffective: new Date(entry["DateEffective"]),
-  DateExpired: new Date(entry["DateExpired"]),
+  DateIssued: entry["DateIssued"] ? new Date(entry["DateIssued"]) : null,
+  DateEffective: entry["DateEffective"] ? new Date(entry["DateEffective"]) : null,
+  DateExpired: entry["DateExpired"] ? new Date(entry["DateExpired"]) : null,
   ADDRESS1: entry["ADDRESS1"],
   ADDRESS2: entry["ADDRESS2"],
   CITY: entry["CITY"],
   STATE: entry["STATE"],
-  ZIP: parseInt(entry["ZIP"], 10),
+  ZIP: entry["ZIP"] ? entry["ZIP"].toString() : "",
 }));
 
 // Write to JSON

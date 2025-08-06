@@ -1,6 +1,6 @@
-import type { NextRequest } from "next/server";
 
-export async function GET(request: NextRequest) {
+
+export async function GET() {
   const url = "https://tbvjhsvoecgza1uc.public.blob.vercel-storage.com/alaskaVets.json";
 
   try {
