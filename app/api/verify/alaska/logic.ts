@@ -1,4 +1,5 @@
 import { VetResult } from "@/app/types/vet-result";
+import BlobSync from "@/data/controls/blobs/blobSync";
 
 export async function verify({
   firstName,
@@ -10,23 +11,23 @@ export async function verify({
   licenseNumber: string;
 }): Promise<VetResult[]> {
   console.log("Alaska Loaded");
-  
+
   type RawVetEntry = {
-  Program: string;
-  ProfType: string;
-  LicenseNum: string;
-  DBA: string;
-  Owners: string;
-  Status: string;
-  DateIssued: string;
-  DateEffective: string;
-  DateExpired: string;
-  ADDRESS1: string;
-  ADDRESS2: string;
-  CITY: string;
-  STATE: string;
-  ZIP: string;
-};
+    Program: string;
+    ProfType: string;
+    LicenseNum: string;
+    DBA: string;
+    Owners: string;
+    Status: string;
+    DateIssued: string;
+    DateEffective: string;
+    DateExpired: string;
+    ADDRESS1: string;
+    ADDRESS2: string;
+    CITY: string;
+    STATE: string;
+    ZIP: string;
+  };
 
 
   const res = await fetch("/api/verify/alaska", {
@@ -47,8 +48,8 @@ export async function verify({
 
     const matchesName = firstName || lastName
       ? (entry.DBA || entry.Owners || "")
-          .toLowerCase()
-          .includes(`${firstName} ${lastName}`.trim().toLowerCase())
+        .toLowerCase()
+        .includes(`${firstName} ${lastName}`.trim().toLowerCase())
       : true;
 
     return matchesLicense && matchesName;
@@ -63,5 +64,6 @@ export async function verify({
     location: `${entry.CITY}, ${entry.STATE} ${entry.ZIP}`.trim(),
   }));
 
+  await BlobSync("alaska", results);
   return results;
 }
