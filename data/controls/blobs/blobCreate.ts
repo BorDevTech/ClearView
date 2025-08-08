@@ -5,6 +5,7 @@ export default async function BlobCreate(blobKey: string, options?: { token?: st
     if (!token) throw new Error("Missing Blob token");
     await put(blobKey, JSON.stringify([], null, 2), {
         access: "public",
-        contentType: "application/json", token,
+        contentType: "application/json",
+        token
     });
 }

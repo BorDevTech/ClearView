@@ -5,7 +5,7 @@ export default async function BlobCheck(blobKey: string, data: VetResult[] = [],
     const token = options?.token ?? process.env.BLOB_READ_WRITE_TOKEN;
     if (!token) throw new Error("Missing Blob token");
     try {
-        const historicBlobs = await list();
+        const historicBlobs = await list({ token });
         return historicBlobs.blobs.some((blob) => blob.pathname === blobKey);
 
     } catch (error) {
