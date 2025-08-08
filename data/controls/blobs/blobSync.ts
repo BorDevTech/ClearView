@@ -10,7 +10,7 @@ export default async function BlobSync(region: string, results?: VetResult[]) {
         const key = `${region}`;
         const blobKey = `${key}Vets.json`;
 
-        
+
 
 
         const exists = await BlobCheck(blobKey, results, { token });
@@ -19,6 +19,11 @@ export default async function BlobSync(region: string, results?: VetResult[]) {
             // ☁️ Upload to Vercel Blob
             await BlobCreate(blobKey, { token });
         } else if (exists && results && results.length > 0) {
+            const payload = {
+                timestamp: new Date().toISOString(),
+                state: key,
+                results: results ?? [],
+            };
             console.log("✅ Blob already exists")
             console.log("⚠️ Updating existing blob with new results...");
 
