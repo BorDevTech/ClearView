@@ -1,4 +1,6 @@
+
 import { VetResult } from "@/app/types/vet-result";
+import BlobSync from "@/data/controls/blobs/blobSync";
 
 export async function verify({
   // firstName,
@@ -54,6 +56,13 @@ export async function verify({
       expiration: expirationDate,
     } as VetResult;
   });
+
+
+  // // 💾 Save to JSON locally
+  // const outputPath = path.join(process.cwd(), "data", "alabamaVets.json");
+  // fs.writeFileSync(outputPath, JSON.stringify(results, null, 2));
+  // console.log(`✅ Saved ${results.length} Alabama vet records to ${outputPath}`);
+  await BlobSync("alabama", results);
 
   return results;
 }

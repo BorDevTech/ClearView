@@ -1,4 +1,5 @@
 import { VetResult } from "@/app/types/vet-result";
+import BlobSync from "@/data/controls/blobs/blobSync";
 
 export async function verify({
   firstName,
@@ -59,7 +60,7 @@ export async function verify({
   );
 
   // Note: issuedDate, expirationDate, and expiration are not present in the Delaware response.
-  return records.map((item) => ({
+  const results = records.map((item) => ({
     name: item.Name || "",
     licenseNumber: item.RecNumber || "",
     issuedDate: null, // Not present in response, fill if available
@@ -69,4 +70,7 @@ export async function verify({
     reportUrl: null,
     expiration: "", // Not present in response, using empty string instead of null
   }));
+
+  await BlobSync("delaware", results);
+  return results;
 }

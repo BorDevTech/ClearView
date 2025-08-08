@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import {Analytics }from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/react";
 import Script from "next/script";
 import "./globals.css";
 import { Provider } from "../components/ui/provider";
@@ -25,6 +25,7 @@ export default function RootLayout({
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "sq8dhiettj");`}
         </Script>
+        <meta name="msvalidate.01" content="E4D7229DE479B098F96B5441BDA3686F" />
         <Analytics />
       </head>
       <body>

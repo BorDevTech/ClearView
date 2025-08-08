@@ -1,4 +1,5 @@
 import { VetResult } from "@/app/types/vet-result";
+import BlobSync from "@/data/controls/blobs/blobSync";
 
 interface VetRecord {
   last_name: string;
@@ -65,11 +66,13 @@ export async function verify({
     return true;
   });
 
-  return filtered.map((record) => ({
+  const results = filtered.map((record) => ({
     name: record.formatted_name?.trim() || buildFullName(record),
     status: record.license_status_description || "",
     expirationDate: record.license_expiration_date,
     licenseNumber: record.license_number,
     expiration: record.license_expiration_date,
   }));
+  await BlobSync("colorado", results);
+  return results;
 }

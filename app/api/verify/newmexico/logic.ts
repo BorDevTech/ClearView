@@ -1,4 +1,5 @@
 import { VetResult } from "@/app/types/vet-result";
+import BlobSync from "@/data/controls/blobs/blobSync";
 
 
 export async function verify({
@@ -59,11 +60,14 @@ export async function verify({
     (item: VetDataItem) => item.LicenseTypeName === "Doctor of Veterinary Medicine"
   );
 
-  return filtered.map((Vet: VetDataItem) => ({
+  const results = filtered.map((Vet: VetDataItem) => ({
     name: Vet.Name || "",
     licenseNumber: Vet.LicenseNumber || "",
     status: Vet.Status || "",
     expiration: Vet.Expiration || "",
     licenseType: Vet.LicenseTypeName || "",
   })); // This will be the raw JSON result
+
+  await BlobSync("newmexico", results);
+  return results;
 }

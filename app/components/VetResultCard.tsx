@@ -33,7 +33,7 @@ export function VetResultCard({ item }: VetResultCardProps) {
           ? "red.50"
           : "gray.50"
       }
-      h="200px"
+      h="175px"
       w="300px"
       overflow="hidden"
       color="black"

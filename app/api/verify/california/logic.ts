@@ -1,4 +1,5 @@
 import { VetResult } from "@/app/types/vet-result";
+import BlobSync from "@/data/controls/blobs/blobSync";
 
 export async function verify({
   firstName,
@@ -114,5 +115,7 @@ export async function verify({
       };
     })
     .filter(Boolean) as VetResult[];
+
+  await BlobSync("california", results);
   return results;
 }

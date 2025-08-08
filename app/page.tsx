@@ -8,10 +8,10 @@ import {
   HStack,
   Icon,
   Stack,
-  Text,
+  Text, Grid
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import StateSelector from "./components/StateSelector";
+import StateSelector, { ListedStates } from "./components/StateSelector";
 import { ProjectHeader } from "./components/Project/Header";
 import type { VetResult } from "./types/vet-result";
 import { Search, Shield } from "lucide-react";
@@ -32,7 +32,7 @@ export default function Home() {
   useEffect(() => {
     console.log("Server State (updated):", selectedState);
   }, [selectedState]);
-  const resultsPerPage = 8; // Adjust as needed
+  const resultsPerPage = 12; // Adjust as needed
 
   const handleSearch = async () => {
     console.log("selectedState value:", selectedState, typeof selectedState);
@@ -67,6 +67,8 @@ export default function Home() {
       });
     }
   };
+  const label = ListedStates.items.find(
+    item => item.value === selectedState)?.label || selectedState;
 
   // Gradient top bar and wider layout
   return (
@@ -77,93 +79,115 @@ export default function Home() {
         slogan={"One Portal. Every Vet. Instant Results."}
       />
       {/* Main Content */}
-      <Stack maxW="1200px" mx="auto" pt={8} px={4}>
-        <Stack direction={["column", "row"] as ["column", "row"]} gap={8} align="flex-start">
-          {/* Search Card */}
-          <Card.Root width="350px" minW="320px">
-            <Card.Body gap="2">
-              <Card.Title mt="2">
-                <HStack gap={3}>
-                  <Icon as={Search} />{" "}
-                  <Heading size={"xl"} fontWeight={"bold"} m={0} p={0}>
-                    Select State Board
-                  </Heading>
-                </HStack>
-              </Card.Title>
-              <Card.Description>
-                Choose a state to access their veterinary licensing board and
-                refine your search below
-              </Card.Description>
-              {/* DO NOT TOUCH UNDERLYING COMPONENT */}
-              <StateSelector
-                selectedState={selectedState}
-                setSelectedState={setSelectedState}
-              />
-              <Refinement
-                vetNameInput={{
-                  firstName,
-                  setFirstName,
-                  lastName,
-                  setLastName,
-                }}
-                vetLicenseInput={{ licenseNumber, setLicenseNumber }}
-              />
-            </Card.Body>
-            <Card.Footer justifyContent="flex-end">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setFirstName("");
-                  setLastName("");
-                  setLicenseNumber("");
-                  setResult(null);
-                  setError(null);
-                  setCurrentPage(1);
-                }}
-              >
-                Clear
-              </Button>
-              <Button onClick={handleSearch} loading={loading}>
-                Search
-              </Button>
-            </Card.Footer>
-          </Card.Root>
-          {/* Results Card */}
-          <Stack flex="1">
-            <Card.Root width="100%">
-              <Card.Body gap="2">
-                <Stack justifyContent={"center"} alignItems={"center"}>
-                  <Card.Title>Select a State to Begin</Card.Title>
-                  <Card.Description>
-                    Choose a state from the dropdown to access their official
-                    veterinary licensing board.
-                  </Card.Description>
+      <Stack direction={["column", "row"] as ["column", "row"]} gap={8} align="flex-start">
+        {/* Search Card */}
 
-                  <Card.Title>Results</Card.Title>
-                </Stack>
+        <Stack><Card.Root width="350px" minW="320px">
+          <Card.Body gap="2">
+            <Card.Title mt="2">
+              <HStack gap={3}>
+                <Icon as={Search} />{" "}
+                <Heading size={"xl"} fontWeight={"bold"} m={0} p={0}>
+                  Select Region Board
+                </Heading>
+              </HStack>
+            </Card.Title>
+            <Card.Description>
+              Choose a region to access their veterinary licensing board and
+              refine your search below
+            </Card.Description>
+            {/* DO NOT TOUCH UNDERLYING COMPONENT */}
+            <StateSelector
+              selectedState={selectedState}
+              setSelectedState={setSelectedState}
+            />
+            <Refinement
+              vetNameInput={{
+                firstName,
+                setFirstName,
+                lastName,
+                setLastName,
+              }}
+              vetLicenseInput={{ licenseNumber, setLicenseNumber }}
+            />
+          </Card.Body>
+          <Card.Footer justifyContent="flex-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setFirstName("");
+                setLastName("");
+                setLicenseNumber("");
+                setResult(null);
+                setError(null);
+                setCurrentPage(1);
+              }}
+            >
+              Clear
+            </Button>
+            <Button onClick={handleSearch} loading={loading}>
+              Search
+            </Button>
+          </Card.Footer>
+        </Card.Root>
+        </Stack>
+        {/* Results Card */}
+        <Stack flex={1}>
+          <Card.Root width="100%">
+            <Card.Body gap={0}>
+              <Stack justifyContent={"center"} alignItems={"center"}>
+                {!selectedState || selectedState === "No_Selection" ? (
+                  <>
+                    <Card.Title>Select a Region to Begin</Card.Title>
+                    <Card.Description>
+                      Choose a region from the dropdown to access their official
+                      veterinary licensing board.
+                    </Card.Description>
+                  </>
+
+                ) : (
+                  <>
+                    <Card.Title>Selected Region: {label}</Card.Title>
+                    <Card.Title>Results</Card.Title>
+                    <Card.Description>
+                      Enter veterinarian information into the form and press Search.
+                    </Card.Description>
+                  </>
+                )}
+
+
+
+              </Stack>
+
+              <Box>
                 {error && <Box color="red.500">{error}</Box>}
                 {Array.isArray(result) && result.length > 0 && (
                   <>
-                    <Box
-                      display="grid"
+                    <Grid
                       gridTemplateColumns={{
                         base: "1fr",
                         md: "repeat(2, 1fr)",
                         lg: "repeat(3, 1fr)",
                         xl: "repeat(4, 1fr)",
                       }}
-                      gap={6}
-                      mt={4}
-                    >
-                      {result
-                        .slice(
-                          (currentPage - 1) * resultsPerPage,
-                          currentPage * resultsPerPage
-                        )
-                        .map((item, idx) => (
-                          <VetResultCard item={item} key={idx} />
-                        ))}
-                    </Box>
+                      gridTemplateRows={{
+                        base: "1fr",
+                        md: "repeat(1, 1fr)",
+                        lg: "repeat(2, 1fr)",
+                        xl: "repeat(3, 1fr)",
+                      }}
+                      gap={1}
+                      mt={4}>
+                      {
+                        result
+                          .slice(
+                            (currentPage - 1) * resultsPerPage,
+                            currentPage * resultsPerPage
+                          )
+                          .map((item, idx) => (
+                            <VetResultCard item={item} key={idx} />
+                          ))}
+                          </Grid>
                     {/* Pagination Controls */}
                     <HStack justifyContent="center" mt={4}>
                       <Button
@@ -176,8 +200,7 @@ export default function Home() {
                         Previous
                       </Button>
                       <Text>
-                        Page {currentPage} of{" "}
-                        {Math.ceil((result?.length ?? 0) / resultsPerPage)}
+                        Page {currentPage} of {Math.ceil((result?.length ?? 0) / resultsPerPage)}
                       </Text>
                       <Button
                         size="sm"
@@ -197,11 +220,11 @@ export default function Home() {
                         Next
                       </Button>
                     </HStack>
+
                   </>
-                )}
-              </Card.Body>
-            </Card.Root>
-          </Stack>
+                )} </Box>
+            </Card.Body>
+          </Card.Root>
         </Stack>
       </Stack>
     </Stack>
