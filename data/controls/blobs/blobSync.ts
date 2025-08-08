@@ -2,6 +2,7 @@ import { VetResult } from "@/app/types/vet-result";
 import BlobCheck from "./blobCheck";
 import BlobCreate from "./blobCreate";
 import BlobUpdate from "./blobUpdate";
+const token = process.env.BLOB_READ_WRITE_TOKEN;
 
 export default async function BlobSync(region: string, results: VetResult[]) {
     try {
@@ -16,20 +17,22 @@ export default async function BlobSync(region: string, results: VetResult[]) {
         };
 
 
-        const exists = await BlobCheck(blobKey);
+        const exists = await BlobCheck(blobKey, results);
         if (!exists) {
             console.log("⚠️ Blob not found, creating...");
             // ☁️ Upload to Vercel Blob
-            await BlobCreate(blobKey);
-        }
-        else if (results.length > 0) {
+            await BlobCreate(blobKey, { token });
+        } else if (exists && results.length > 0) {
             console.log("✅ Blob already exists")
             console.log("⚠️ Updating existing blob with new results...");
 
-            const blob = await BlobUpdate(blobKey, payload);
+            const blob = await BlobUpdate(blobKey, payload, { token });
 
             console.log(`🚀 Uploaded to Blob: ${blob.url}`);
             console.log(`📥 Download URL: ${blob.downloadUrl}`);
+        }
+        else if (exists && results.length === 0) {
+            console.log("ℹ️ Blob exists, but no new results to update.");
         }
         console.log("🔍 BlobCheck result:", exists);
 
