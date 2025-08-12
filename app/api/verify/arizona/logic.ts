@@ -22,7 +22,10 @@ export async function verify({
     licenseType: "Veterinarian (Regular)",
     licenseStatus: "Active",
     disciplined: "false",
-  });
+  });type ArizonaEntry = {
+  columnValues: { data: string }[];
+};
+
 
   const res = await fetch(`/api/verify/arizona/?${queryParams.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch Arizona data");
@@ -30,7 +33,7 @@ export async function verify({
   const data = await res.json();
   const rawResults = data?.result?.dataResults || [];
 
-  const results: VetResult[] = rawResults.map((entry: any) => {
+  const results: VetResult[] = rawResults.map((entry: ArizonaEntry) => {
     const licenseNumber = entry.columnValues?.[0]?.data || "";
     const first = entry.columnValues?.[1]?.data || "";
     const last = entry.columnValues?.[2]?.data || "";

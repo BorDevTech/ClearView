@@ -7,7 +7,6 @@ import {
   Status,
   Tag,
   Text,
-  useBreakpointValue,
   VStack,
 } from "@chakra-ui/react";
 import { Activity } from "lucide-react";
