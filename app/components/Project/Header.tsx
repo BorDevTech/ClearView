@@ -3,9 +3,11 @@ import {
   Heading,
   HStack,
   Icon,
+  Show,
   Status,
   Tag,
   Text,
+  useBreakpointValue,
   VStack,
 } from "@chakra-ui/react";
 import { Activity } from "lucide-react";
@@ -23,6 +25,8 @@ const offlineStates = ListedStates.items.filter(
 const checkingStates = ListedStates.items.filter(
   (state) => state.active === null
 ).length;
+
+
 
 export function ProjectHeader({
   icon,
@@ -46,7 +50,7 @@ export function ProjectHeader({
         gradientTo={"#2179b5"}
       >
         <Container
-          maxW={"7xl"}
+
           m={"auto"}
           px={{ sm: 6, base: 4, lg: 8 }}
           py={6}
@@ -76,40 +80,44 @@ export function ProjectHeader({
                   </Text>
                 </Heading>
               </VStack>
-            </HStack>
-            <HStack justify={"space-between"}>
-              <Tag.Root rounded={"full"}>
-                <Status.Root>
-                  <Status.Indicator colorPalette={"red"} />
-                  <Icon as={Activity} color={"red"} />
-                  {offlineStates} Offline
-                </Status.Root>
-              </Tag.Root>
-              <Tag.Root rounded={"full"}>
-                <Status.Root>
-                  <Status.Indicator colorPalette={"yellow"} />
 
-                  <Icon as={Activity} color={"yellow"} />
-                  {checkingStates} Checking
-                </Status.Root>
-              </Tag.Root>
-              <Tag.Root rounded={"full"}>
-                <Status.Root>
-                  <Status.Indicator colorPalette={"green"} />
-                  <Icon as={Activity} color={"green"} />
-                  {onlineStates} Online
-                </Status.Root>
-              </Tag.Root>
-              <Tag.Root rounded={"full"}>
-                <Status.Root size="lg">
-                  <Status.Indicator />
-                  {totalStates} Total Lookups
-                </Status.Root>
-              </Tag.Root>
             </HStack>
+
+            <Show when={""}  >
+              <HStack justify={"space-between"}>
+                <Tag.Root rounded={"full"}>
+                  <Status.Root>
+                    <Status.Indicator colorPalette={"red"} />
+                    <Icon as={Activity} color={"red"} />
+                    {offlineStates} Offline
+                  </Status.Root>
+                </Tag.Root>
+                <Tag.Root rounded={"full"}>
+                  <Status.Root>
+                    <Status.Indicator colorPalette={"yellow"} />
+
+                    <Icon as={Activity} color={"yellow"} />
+                    {checkingStates} Checking
+                  </Status.Root>
+                </Tag.Root>
+                <Tag.Root rounded={"full"}>
+                  <Status.Root>
+                    <Status.Indicator colorPalette={"green"} />
+                    <Icon as={Activity} color={"green"} />
+                    {onlineStates} Online
+                  </Status.Root>
+                </Tag.Root>
+                <Tag.Root rounded={"full"}>
+                  <Status.Root size="lg">
+                    <Status.Indicator />
+                    {totalStates} Total Lookups
+                  </Status.Root>
+                </Tag.Root>
+              </HStack>
+            </Show>
           </HStack>
-        </Container>
-      </HStack>
+        </Container >
+      </HStack >
     </>
   );
 }
