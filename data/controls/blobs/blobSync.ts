@@ -3,45 +3,52 @@ import BlobCheck from "./blobCheck";
 import BlobCreate from "./blobCreate";
 import BlobUpdate from "./blobUpdate";
 
-export default async function BlobSync(region: string, results?: VetResult[]) {
-    const token = process.env.BLOB_READ_WRITE_TOKEN;
+/**
+ * * Creates a new blob in Vercel Blob storage.
+ * @param region - The unique identifier (region) to sync.
+ * @returns The blob's identifier.
+ *
+ * *Creates a new blob in Vercel Blob storage.
+ * @param results - The results to be passed to the unique identifier (region).
+ * @returns The results to be passed to blob.
+ */
+
+
+export default async function BlobSync(region: string, results?: VetResult[],) {
+    // ☁️ Check if Vercel Blob exists 
+
+    const blobKey = `${region}Vets.json`;
     try {
-        // ☁️ Check if Vercel Blob exists
-        const key = `${region}`;
-        const blobKey = `${key}Vets.json`;
-
-
-
-
-        const exists = await BlobCheck(blobKey, results, { token });
+        const exists = await BlobCheck(region);
         if (!exists) {
             console.log("⚠️ Blob not found, creating...");
             // ☁️ Upload to Vercel Blob
-            await BlobCreate(blobKey, { token });
-        } else if (exists && results && results.length > 0) {
+            const createdBlob = await BlobCreate(blobKey);
+            return createdBlob;
+        }
+        if (exists && results && results.length > 0) {
             const payload = {
                 timestamp: new Date().toISOString(),
-                state: key,
-                results: results ?? [],
+                state: region,
+                count: results.length,
+                results,
             };
             console.log("✅ Blob already exists")
             console.log("⚠️ Updating existing blob with new results...");
 
-            const blob = await BlobUpdate(blobKey, payload, { token });
+            const blob = await BlobUpdate(region, payload);
 
             console.log(`🚀 Uploaded to Blob: ${blob.url}`);
             console.log(`📥 Download URL: ${blob.downloadUrl}`);
+            return blobKey;
         }
-        else if (exists && results && results.length === 0) {
-            console.log("ℹ️ Blob exists, but no new results to update.");
+        if (exists && results && results.length === 0) {
+            return console.log("ℹ️ Blob already exists, but no new results to update.");
         }
-        console.log("🔍 BlobCheck result:", exists);
 
-
-
-
-
+        return results;
     } catch (error) {
         console.error("❌ Blob upload failed:", error);
+        return null;
     }
 }

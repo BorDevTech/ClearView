@@ -1,9 +1,16 @@
-import { VetResult } from "@/app/types/vet-result";
 import { list } from "@vercel/blob";
 
-export default async function BlobCheck(blobKey: string, data: VetResult[] = [], options: { token?: string }) {
+/**
+ * Checks if a blob exists in Vercel Blob storage.
+ * @param blobKey - The unique identifier (region) for the blob to check.
+ * @returns True if the blob exists, false otherwise.
+ */
 
-    const token = options.token || process.env.BLOB_READ_WRITE_TOKEN;
+export default async function BlobCheck(key: string) {
+     
+  const blobKey = `${key}Vets.json`;
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+
 
     try {
         const historicBlobs = await list({ token });
@@ -16,5 +23,4 @@ export default async function BlobCheck(blobKey: string, data: VetResult[] = [],
         return false;
 
     }
-
 }

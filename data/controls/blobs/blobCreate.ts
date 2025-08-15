@@ -1,11 +1,20 @@
 import { put } from "@vercel/blob";
 
-export default async function BlobCreate(blobKey: string, options?: { token?: string }) {
-    const token = options?.token ?? process.env.BLOB_READ_WRITE_TOKEN;
+/**
+ * Creates a new blob in Vercel Blob storage.
+ * @param region - The unique identifier (region) to create the blob under.
+ * @returns The created blob's URL.
+ */
+
+export default async function BlobCreate(region: string) {
+    const blobKey = `${region}Vets.json`;
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
     if (!token) throw new Error("Missing Blob token, failed to Create");
-    await put(blobKey, JSON.stringify([], null, 2), {
+    const createdBlob = await put(blobKey, JSON.stringify([], null, 2), {
         access: "public",
         contentType: "application/json",
         token
     });
+    console.log(`✅ Created Blob: ${createdBlob.url}`);
+    return createdBlob.url;
 }
