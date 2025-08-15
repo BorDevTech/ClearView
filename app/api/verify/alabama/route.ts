@@ -2,7 +2,6 @@ export const runtime = "edge";
 import type { NextRequest } from "next/server";
 import { verify } from "./logic";
 import BlobCheck from "@/data/controls/blobs/blobCheck";
-import { VetResult } from "@/app/types/vet-result";
 import BlobSync from "@/data/controls/blobs/blobSync";
 import BlobCreate from "@/data/controls/blobs/blobCreate";
 import BlobUpdate from "@/data/controls/blobs/blobUpdate";
@@ -14,8 +13,6 @@ export async function GET(request: NextRequest) {
   const licenseNumber = searchParams.get("license") || "";
   const key = "alabama";
   const blobKey = `${key}Vets.json`;
-
-  let updateBlob: any = null;
 
   // 🔍 Check for existing blob
   const existingBlob = await BlobCheck(key);

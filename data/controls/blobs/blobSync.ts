@@ -40,6 +40,7 @@ export default async function BlobSync(region: string, results?: VetResult[],) {
 
             console.log(`🚀 Uploaded to Blob: ${blob.url}`);
             console.log(`📥 Download URL: ${blob.downloadUrl}`);
+            console.log(`✅ Sync to Blob Successful}`);
             return blobKey;
         }
         if (exists && results && results.length === 0) {
