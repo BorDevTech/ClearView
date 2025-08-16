@@ -29,6 +29,39 @@ export async function verify({
     ZIP: string;
   };
 
+  // 🔍 Internal helper: parse blob response
+  function parseBlob(raw: any): RawVetEntry[] {
+    return Array.isArray(raw) ? raw : raw.blob ?? [];
+  }
+
+  // 🧠 Internal helper: filter and transform entries
+  function filterEntries(entries: RawVetEntry[]): VetResult[] {
+    return entries
+      .filter((entry) => {
+        const isVet = entry.Program?.trim() === "Veterinary" && entry.ProfType?.trim() === "Veterinarian";
+        if (!isVet) return false;
+
+        const matchesLicense = licenseNumber
+          ? entry.LicenseNum?.toLowerCase().includes(licenseNumber.toLowerCase())
+          : true;
+
+        const matchesName = firstName || lastName
+          ? (entry.DBA || entry.Owners || "")
+            .toLowerCase()
+            .includes(`${firstName} ${lastName}`.trim().toLowerCase())
+          : true;
+
+        return matchesLicense && matchesName;
+      })
+      .map((entry) => ({
+        name: entry.DBA || entry.Owners || "Unknown",
+        licenseNumber: entry.LicenseNum?.trim(),
+        status: entry.Status?.trim(),
+        issued: new Date(entry.DateIssued).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" }),
+        expiration: new Date(entry.DateExpired).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" })
+      }));
+  }
+
 
   const res = await fetch("/api/verify/alaska", {
     method: "GET",
@@ -36,34 +69,7 @@ export async function verify({
 
   if (!res.ok) throw new Error("Failed to fetch Alaska data");
   const rawData = await res.json();
-
-  const filtered = rawData.filter((entry: RawVetEntry) => {
-    const isVet = entry.Program?.trim() === "Veterinary" && entry.ProfType?.trim() === "Veterinarian";
-
-    if (!isVet) return false;
-
-    const matchesLicense = licenseNumber
-      ? entry.LicenseNum?.toLowerCase().includes(licenseNumber.toLowerCase())
-      : true;
-
-    const matchesName = firstName || lastName
-      ? (entry.DBA || entry.Owners || "")
-        .toLowerCase()
-        .includes(`${firstName} ${lastName}`.trim().toLowerCase())
-      : true;
-
-    return matchesLicense && matchesName;
-  });
-
-  const results: VetResult[] = filtered.map((entry: RawVetEntry) => ({
-    name: entry.DBA || entry.Owners || "Unknown",
-    licenseNumber: entry.LicenseNum?.trim(),
-    status: entry.Status?.trim(),
-    issued: entry.DateIssued ? new Date(entry.DateIssued) : null,
-    expires: entry.DateExpired ? new Date(entry.DateExpired) : null,
-    location: `${entry.CITY}, ${entry.STATE} ${entry.ZIP}`.trim(),
-  }));
-
-  await BlobSync("alaska", results);
+  const parsedData = parseBlob(rawData);
+  const results = filterEntries(parsedData);
   return results;
 }
