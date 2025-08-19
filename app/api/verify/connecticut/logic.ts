@@ -49,7 +49,7 @@ export async function verify({
     // 🧹 Normalize and map entries
     return entries
       .filter((entry) => {
-        const isVet = entry.current?.trim() === "CURRENT" && entry.status?.trim() === "Active";
+        const isVet = entry.current?.trim() === "CURRENT" && entry.status?.trim() === "ACTIVE";
         if (!isVet) return false;
 
         const matchesLicense = licenseNumber
