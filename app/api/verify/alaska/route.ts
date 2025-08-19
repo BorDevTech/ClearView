@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     console.warn(`⚠️ BlobFetch failed for ${key}, falling back to live parse`);
     // If blob does not exist, fetch and parse, then create/update blob
     try {
+
       // // 🌐 Fallback: fetch HTML and parse
       const { verify } = await import(`./../../../app/api/verify/${key}/logic`);
       // Forward all query string parameters from the incoming request
@@ -46,8 +47,3 @@ export async function GET(request: NextRequest) {
     };
   }
 }
-
-
-
-
-

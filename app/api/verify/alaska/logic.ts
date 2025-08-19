@@ -45,10 +45,27 @@ export async function verify({
           ? entry.LicenseNum?.toLowerCase().includes(licenseNumber.toLowerCase())
           : true;
 
+
+
         const matchesName = firstName || lastName
-          ? (entry.DBA || entry.Owners || "")
-            .toLowerCase()
-            .includes(`${firstName} ${lastName}`.trim().toLowerCase())
+          ? (() => {
+            // Use DBA if available, otherwise Owners
+            const name = (entry.DBA || entry.Owners || "").trim();
+            const [dbaFirst, ...dbaRest] = name.split(" ");
+            const dbaLast = dbaRest.length > 0 ? dbaRest[dbaRest.length - 1] : "";
+
+            let firstMatches = true;
+            let lastMatches = true;
+
+            if (firstName) {
+              firstMatches = dbaFirst?.toLowerCase().startsWith(firstName.toLowerCase());
+            }
+            if (lastName) {
+              lastMatches = dbaLast?.toLowerCase().startsWith(lastName.toLowerCase());
+            }
+
+            return firstMatches && lastMatches;
+          })()
           : true;
 
         return matchesLicense && matchesName;

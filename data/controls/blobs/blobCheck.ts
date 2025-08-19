@@ -7,19 +7,17 @@ import { list } from "@vercel/blob";
  */
 
 export default async function BlobCheck(key: string) {
-     
-  const blobKey = `${key}Vets.json`;
+    const blobKey = `${key}Vets.json`;
     const token = process.env.BLOB_READ_WRITE_TOKEN;
-
+    // if (!token) throw new Error("Missing Blob token, failed to Check");
 
     try {
-        const historicBlobs = await list({ token });
-        console.log("🔍 Historic Blobs:", historicBlobs);
+        const historicBlobs = await list({ token: token });
+        // console.log("🔍 Historic Blobs:", historicBlobs);
         return historicBlobs.blobs.some((blob) => blob.pathname === blobKey);
 
     } catch (error) {
         console.warn(`⚠️ Failed to list blobs for ${blobKey}:`, error);
-        if (!token) throw new Error("Missing Blob token, failed to Check");
         return false;
 
     }

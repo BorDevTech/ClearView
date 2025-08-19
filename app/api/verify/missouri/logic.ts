@@ -1,5 +1,4 @@
 import { VetResult } from "@/app/types/vet-result";
-import BlobSync from "@/data/controls/blobs/blobSync";
 
 interface VetRecord {
   prc_first_name: string;
@@ -34,54 +33,72 @@ export async function verify({
   lastName: string;
   licenseNumber: string;
 }): Promise<VetResult[]> {
-  const queryParams = new URLSearchParams({
-    firstname: firstName || "",
-    license: licenseNumber || "",
-    lastname: lastName || "",
+
+  type RawVetEntry = {
+    prc_first_name: string;
+    prc_middle_name: string;
+    prc_last_name: string;
+    prc_suffix: string;
+    lic_profession: string;
+    lic_number: string;
+    lst_description: string;
+    les_description: string;
+    prc_dba_name: string;
+    lic_orig_issue_date: string;
+    lic_exp_date: string;
+    prc_entity_name: string;
+  };
+  const key = "missouri";
+
+  // 🔍 Internal helper: parse blob response
+  function parseBlob(raw: any): RawVetEntry[] {
+    return Array.isArray(raw) ? raw : raw.blob ?? [];
+  }
+
+  // 🧠 Internal helper: filter and transform entries
+  function filterEntries(entries: RawVetEntry[]): VetResult[] {
+    // 🧹 Normalize and map entries
+    return entries
+      .filter((entry) => {
+        const isVet = entry.lic_profession?.trim() === "VET" && entry.lst_description?.trim() === "Active";
+        if (!isVet) return false;
+
+        const matchesLicense = licenseNumber
+          ? entry.lic_number?.toLowerCase().includes(licenseNumber.toLowerCase())
+          : true;
+
+        let matchesName = true;
+        if (firstName) {
+          matchesName =
+            typeof entry.prc_first_name === "string" &&
+            entry.prc_first_name.toLowerCase().startsWith(firstName.toLowerCase());
+        }
+        if (matchesName && lastName) {
+          matchesName =
+            typeof entry.prc_last_name === "string" &&
+            entry.prc_last_name.toLowerCase().startsWith(lastName.toLowerCase());
+        }
+
+        return matchesLicense && matchesName;
+
+      })
+      .map((entry) => ({
+        name: `${entry.prc_first_name} ${entry.prc_last_name}`.trim(),
+        licenseNumber: entry.lic_number?.trim(),
+        status: entry.lst_description?.trim(),
+        issued: new Date(entry.lic_orig_issue_date).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" }),
+        expiration: new Date(entry.lic_exp_date).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" })
+      }));
+  }
+
+
+  const res = await fetch(`/api/verify/${key}`, {
+    method: "GET",
   });
 
-  const res = await fetch(`/api/verify/missouri?${queryParams.toString()}`);
-  if (!res.ok) throw new Error("Failed to fetch VET.json from GitHub");
-
-  const data: VetRecord[] = await res.json();
-
-  const firstNameLower = firstName.toLowerCase();
-  const lastNameLower = lastName.toLowerCase();
-  const licenseNumberLower = licenseNumber.toLowerCase();
-
-  const filtered = data.filter((record) => {
-    if (
-      licenseNumber &&
-      record.lic_number.toLowerCase() !== licenseNumberLower
-    ) {
-      return false;
-    }
-    if (
-      lastName &&
-      !record.prc_last_name.toLowerCase().includes(lastNameLower)
-    ) {
-      return false;
-    }
-    if (
-      firstName &&
-      !record.prc_first_name.toLowerCase().includes(firstNameLower)
-    ) {
-      return false;
-    }
-    return true;
-  });
-
-  const results = filtered.map((record) => ({
-    name: buildFullName(record),
-    licenseNumber: record.lic_number,
-    issuedDate: record.lic_orig_issue_date,
-    expirationDate: record.lic_exp_date,
-    status: record.lst_description || "",
-    detailsUrl: "",
-    reportUrl: "",
-    expiration: record.lic_exp_date,
-  }));
-
-  await BlobSync("missouri", results);
+  if (!res.ok) throw new Error(`Failed to fetch ${key} data`);
+  const rawData = await res.json();
+  const parsedData = parseBlob(rawData);
+  const results = filterEntries(parsedData);
   return results;
-}
+} 
