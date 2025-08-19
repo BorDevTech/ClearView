@@ -8,26 +8,10 @@ import BlobConvert from "@/data/controls/blobs/BlobConvert";
 
 export async function GET(request: NextRequest) {
   const key = "missouri";
-
-  // try {
-  //   console.log("attempting alaska method");
-  //   const data = await BlobFetch(key);
-  //   // ✅ Convert and write blob immediately after fetch
-  //   await BlobConvert(key, data);
-
-  //   return NextResponse.json({
-  //     blob: data,
-  //     count: Array.isArray(data) ? data.length : 0,
-  //   });
-  // } catch (error) {
-  //   console.error(`⚠️ BlobFetch failed for ${key}:`, error);
-  // }
-
   const { search } = new URL(request.url);
   const url =
     "https://raw.githubusercontent.com/BorDevTech/ClearView/refs/heads/main/app/api/verify/missouri/VET.json" +
     (search || "");
-
 
   try {
     const blobData = await BlobFetch(key);

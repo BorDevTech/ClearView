@@ -8,7 +8,6 @@ import BlobConvert from "@/data/controls/blobs/BlobConvert";
 
 export async function GET(request: NextRequest) {
   const key = "alaska";
-
   try {
     const data = await BlobFetch(key);
     // ✅ Convert and write blob immediately after fetch

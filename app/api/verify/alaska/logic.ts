@@ -1,5 +1,4 @@
 import { VetResult } from "@/app/types/vet-result";
-import BlobSync from "@/data/controls/blobs/blobSync";
 
 export async function verify({
   firstName,

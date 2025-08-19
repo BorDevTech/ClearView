@@ -14,16 +14,6 @@ interface VetRecord {
   prc_entity_name: string;
 }
 
-function buildFullName(record: VetRecord): string {
-  const parts = [
-    record.prc_first_name?.trim(),
-    record.prc_middle_name?.trim(),
-    record.prc_last_name?.trim(),
-    record.prc_suffix?.trim(),
-  ].filter(Boolean);
-  return parts.join(" ");
-}
-
 export async function verify({
   firstName,
   lastName,

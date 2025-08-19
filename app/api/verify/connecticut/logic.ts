@@ -11,13 +11,6 @@ interface VetRecord {
   formatted_name: string;
 }
 
-function buildFullName(record: VetRecord): string {
-  const parts = [record.first_name?.trim(), record.last_name?.trim()].filter(
-    Boolean
-  );
-  return parts.join(" ");
-}
-
 export async function verify({
   firstName,
   lastName,
