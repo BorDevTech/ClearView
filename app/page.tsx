@@ -86,7 +86,7 @@ export default function Home() {
           <Card.Body gap="2">
             <Card.Title mt="2">
               <HStack gap={3}>
-                <Icon as={Search} />{" "}
+                <Icon as={Search} />
                 <Heading size={"xl"} fontWeight={"bold"} m={0} p={0}>
                   Select Region Board
                 </Heading>

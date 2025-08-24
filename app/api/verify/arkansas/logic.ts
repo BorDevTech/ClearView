@@ -45,7 +45,7 @@ export async function verify({
     license_expiration?: string;
   }> {
     try {
-      const res = await fetch(`https://mip.agri.arkansas.gov/VetLicensingPortal/api/license/${licenseNum}`);
+      const res = await fetch(`https://mip.agri.arkansas.gov/VetLicensingPortal/Guest/Home/Get_Licensee_Info?id=${licenseNum}`);
       if (!res.ok) throw new Error(`Failed for ${licenseNum}`);
       const data = await res.json();
       return {

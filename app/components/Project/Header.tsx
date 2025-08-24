@@ -82,38 +82,36 @@ export function ProjectHeader({
 
             </HStack>
 
-            <Show when={""}  >
-              <HStack justify={"space-between"}>
-                <Tag.Root rounded={"full"}>
-                  <Status.Root>
-                    <Status.Indicator colorPalette={"red"} />
-                    <Icon as={Activity} color={"red"} />
-                    {offlineStates} Offline
-                  </Status.Root>
-                </Tag.Root>
-                <Tag.Root rounded={"full"}>
-                  <Status.Root>
-                    <Status.Indicator colorPalette={"yellow"} />
+            <HStack justify={"space-between"}>
+              <Tag.Root rounded={"full"}>
+                <Status.Root>
+                  <Status.Indicator colorPalette={"red"} />
+                  <Icon as={Activity} color={"red"} />
+                  {offlineStates} Offline
+                </Status.Root>
+              </Tag.Root>
+              <Tag.Root rounded={"full"}>
+                <Status.Root>
+                  <Status.Indicator colorPalette={"yellow"} />
 
-                    <Icon as={Activity} color={"yellow"} />
-                    {checkingStates} Checking
-                  </Status.Root>
-                </Tag.Root>
-                <Tag.Root rounded={"full"}>
-                  <Status.Root>
-                    <Status.Indicator colorPalette={"green"} />
-                    <Icon as={Activity} color={"green"} />
-                    {onlineStates} Online
-                  </Status.Root>
-                </Tag.Root>
-                <Tag.Root rounded={"full"}>
-                  <Status.Root size="lg">
-                    <Status.Indicator />
-                    {totalStates} Total Lookups
-                  </Status.Root>
-                </Tag.Root>
-              </HStack>
-            </Show>
+                  <Icon as={Activity} color={"yellow"} />
+                  {checkingStates} Checking
+                </Status.Root>
+              </Tag.Root>
+              <Tag.Root rounded={"full"}>
+                <Status.Root>
+                  <Status.Indicator colorPalette={"green"} />
+                  <Icon as={Activity} color={"green"} />
+                  {onlineStates} Online
+                </Status.Root>
+              </Tag.Root>
+              <Tag.Root rounded={"full"}>
+                <Status.Root size="lg">
+                  <Status.Indicator />
+                  {totalStates} Total Lookups
+                </Status.Root>
+              </Tag.Root>
+            </HStack>
           </HStack>
         </Container >
       </HStack >
