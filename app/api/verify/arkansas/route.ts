@@ -25,9 +25,9 @@ export async function GET(request: NextRequest) {
       },
     });
     const data = await response.text();
-    return new Response(data, {
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-      status: response.status,
+    return NextResponse.json({
+      blob: data,
+      count: Array.isArray(data) ? data.length : 0,
     });
   } catch (error) {
     console.warn(`⚠️ BlobFetch failed for ${key}, falling back to live parse`);
