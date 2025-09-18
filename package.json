@@ -2,11 +2,16 @@
   "name": "app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "script": "tsx",
+    "alberta:convertPDF": "tsx app/api/verify/alberta/convertPDF.ts",
+    "alberta:convertCSV": "tsx app/api/verify/alberta/convertCSV.ts",
+    "alberta:test": "tsx app/api/verify/alberta/test.ts"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.19.1",

@@ -301,6 +301,37 @@ npm run dev
 open http://localhost:3000
 ```
 
+#### TypeScript Script Execution
+The project is configured for **ES Modules (ESM)** with proper TypeScript support. Use the following methods to run standalone TypeScript scripts:
+
+**Method 1: Using npm scripts (Recommended)**
+```bash
+# Run specific utility scripts
+npm run alberta:test           # Test Alberta verification
+npm run alberta:convertPDF     # Convert Alberta PDF data  
+npm run alberta:convertCSV     # Convert Alberta CSV data
+
+# Run any TypeScript file
+npm run script <path-to-file>.ts
+```
+
+**Method 2: Direct execution with tsx**
+```bash
+# Navigate to script directory
+cd app/api/verify/alberta
+
+# Run TypeScript files directly
+npx tsx convertPDF.ts
+npx tsx convertCSV.ts
+npx tsx test.ts
+```
+
+**ESM Configuration Notes:**
+- Project uses `"type": "module"` for full ESM support
+- TypeScript config optimized for both Next.js and standalone scripts
+- All scripts support modern ES modules (`import`/`export`)
+- Use `fileURLToPath(import.meta.url)` instead of `__dirname` in ESM scripts
+
 #### Build & Deployment
 ```bash
 # Production build

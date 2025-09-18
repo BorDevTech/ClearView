@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
+    "target": "ES2022",
     "lib": [
       "dom",
       "dom.iterable",
@@ -11,8 +11,8 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "ESnext",
-    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -29,8 +29,10 @@
     }
   },
   "ts-node": {
+    "esm": true,
     "compilerOptions": {
-      "module": "ESNext"
+      "module": "ESNext",
+      "moduleResolution": "NodeNext"
     }
   },
   "include": [
@@ -38,7 +40,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-, "app/api/verify/alberta/convertPDF.ts"  ],
+  ],
   "exclude": [
     "node_modules"
   ]
