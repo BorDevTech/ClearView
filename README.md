@@ -332,6 +332,31 @@ npx tsx test.ts
 - All scripts support modern ES modules (`import`/`export`)
 - Use `fileURLToPath(import.meta.url)` instead of `__dirname` in ESM scripts
 
+#### Troubleshooting TypeScript Scripts
+If you encounter issues running TypeScript files:
+
+**✅ Correct approach (after Dec 2024 ESM updates):**
+```bash
+npm run script <file>.ts    # Recommended
+npx tsx <file>.ts           # Direct execution
+```
+
+**❌ Avoid these deprecated methods:**
+```bash
+npx ts-node <file>.ts                    # May cause ESM errors  
+node --loader ts-node/esm <file>.ts      # Circular dependency issues
+```
+
+**Common ESM Migration Tips:**
+- Replace `const __dirname = path.dirname(__filename)` with ESM equivalent:
+  ```typescript
+  import { fileURLToPath } from "url";
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  ```
+- Ensure all imports use `import` syntax, not `require()`
+- Use `.js` extensions in relative imports for full ESM compatibility
+
 #### Build & Deployment
 ```bash
 # Production build
