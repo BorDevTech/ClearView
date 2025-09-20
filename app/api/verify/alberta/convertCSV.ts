@@ -1,57 +1,57 @@
-import * as fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+// app/api/verify/alberta/convertCSV.ts
+import { readFile, writeFile } from "fs/promises";
 import { parse } from "csv-parse/sync";
 
-// ES Module equivalent of __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 interface VetEntry {
-    FirstName: string;
-    LastName: string;
-    LicenseNum: string;
-    Status: string;
-    City: string;
+    LAST_NAME: string;
+    FIRST_NAME: string;
+    TYPE: string;
+    LICENSE: string;
 }
 
-// Load the CSV file
-const csvPath = path.join(__dirname, "alaskaVets.csv");
-const csvContent = fs.readFileSync(csvPath, "utf-8");
+type RawVetEntry = Record<string, string>;
 
-const rawRecords = parse(csvContent, {
-    columns: true,
-    skip_empty_lines: true,
+// Resolve paths relative to this module
+const csvUrl = new URL("./albertaVets.csv", import.meta.url);
+const jsonUrl = new URL("./albertaVets.json", import.meta.url);
+
+async function convertCsvToJson() {
+    // 1) Read CSV
+    const csvContent = await readFile(csvUrl, "utf-8");
+
+    // 2) Parse
+    const rawRecords = parse(csvContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+        ltrim: true,
+        rtrim: true,
+    }) as RawVetEntry[];
+    console.log(`📄 Detected ${rawRecords.length} CSV lines.`);
+
+    // 3) Filter for “Veterinarian”
+    const filtered = rawRecords.filter((entry) =>
+        entry.TYPE?.toLowerCase().includes("veterinarian")
+    );
+    console.log(
+        `🩺 Found ${filtered.length} veterinarian records of ${rawRecords.length} total records.`
+    );
+
+    // 4) Map into strongly-typed VetEntry[]
+    const records: VetEntry[] = filtered.map((e) => ({
+        LAST_NAME: e.LAST_NAME,
+        FIRST_NAME: e.FIRST_NAME,
+        TYPE: e.TYPE,
+        LICENSE: e.LICENSE,
+    }));
+    console.log(`✅ ${records.length} veterinarian records after filtering.`);
+
+    // 5) Write JSON
+    await writeFile(jsonUrl, JSON.stringify(records, null, 2), "utf-8");
+    console.log(`✅ Conversion complete. JSON saved to ${jsonUrl.pathname}`);
+}
+
+convertCsvToJson().catch((err) => {
+    console.error("❌ Conversion failed:", err);
+    process.exit(1);
 });
-// ✅ Log how many lines were detected
-console.log(`📄 Detected ${rawRecords.length} CSV lines.`);
-
-type RawVetEntry = {
-    [key: string]: string;
-};
-
-// ✅ Filter for Veterinary + Veterinarian only
-const filteredRecords = rawRecords.filter((entry: RawVetEntry) =>
-    entry["Program"]?.trim() === "Veterinary" &&
-    entry["ProfType"]?.trim() === "Veterinarian"
-);
-
-console.log(`🩺 Found ${filteredRecords.length} veterinarian records of ${rawRecords.length} total records.`);
-
-// Transform to VetEntry[]
-const records: VetEntry[] = filteredRecords.map((entry: RawVetEntry) => ({
-    FirstName: entry["First Name"]?.split(",")[1]?.trim() || "",
-    LastName: entry["Last Name"]?.split(",")[0]?.trim() || "",
-    LicenseNum: entry["LicenseNum"],
-    Status: entry["Status"],
-    City: entry["City"],
-}));
-
-// Write to JSON
-const outputPath = path.join(__dirname, "alaskaVets.json");
-fs.writeFileSync(outputPath, JSON.stringify(records, null, 2));
-
-console.log("✅ Conversion complete. JSON saved to alaskaVets.json.");
-
-
-console.log(`✅ ${records.length} Veterinarian CSV records converted to JSON successfully.`);

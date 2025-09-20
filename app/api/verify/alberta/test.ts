@@ -1,1 +1,0 @@
-console.log("Running Alberta test script");

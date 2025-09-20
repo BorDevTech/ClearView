@@ -4,7 +4,7 @@ export interface VetResult {
   lastName?: string;
   zip?: number;
   licenseNumber?: string;
-  status: string;
-  expiration: string;
+  status?: string;
+  expiration?: string;
   licenseType?: string;
 }

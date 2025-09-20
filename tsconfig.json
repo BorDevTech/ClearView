@@ -11,8 +11,8 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "ESNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESnext",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -30,9 +30,9 @@
   },
   "ts-node": {
     "esm": true,
+    "transpileOnly": true,
     "compilerOptions": {
-      "module": "ESNext",
-      "moduleResolution": "NodeNext"
+      "module": "ESNext"
     }
   },
   "include": [
