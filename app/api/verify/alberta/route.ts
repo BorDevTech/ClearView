@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
       headers: { "Content-Type": "application/json; charset=utf-8" },
       status: response.status,
     });
-  } catch (w) {
-    console.warn(`⚠️ BlobFetch failed for ${key}, falling back to live parse`);
+  } catch (error: unknown) {
+    console.warn(`⚠️ BlobFetch failed for ${key}, falling back to live parse: ${error}`);
     // If blob does not exist, fetch and parse, then create/update blob
     ////
     try {

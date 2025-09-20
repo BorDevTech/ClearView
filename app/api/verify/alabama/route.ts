@@ -8,9 +8,9 @@ import { verify } from "./logic"
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const firstName = searchParams.get("firstname") || "";
-  const lastName = searchParams.get("lastname") || "";
-  const licenseNumber = searchParams.get("license") || "";
+  // const firstName = searchParams.get("firstname") || "";
+  // const lastName = searchParams.get("lastname") || "";
+  // const licenseNumber = searchParams.get("license") || "";
 
   const key = "alabama";
 
@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
       count: Array.isArray(data) ? data.length : 0,
     });
   } catch (error: unknown) {
+
+    console.warn(`⚠️ BlobFetch failed for ${key}, falling back to live parse: ${error}`);
     // If blob does not exist, fetch and parse, then create/update blob
     try {
       // 🌐 Fetch Alabama portal HTML

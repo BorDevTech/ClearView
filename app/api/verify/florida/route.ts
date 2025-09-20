@@ -1,9 +1,9 @@
 import type { NextRequest } from "next/server";
-import { verify } from "./logic";
-import BlobCheck from "@/data/controls/blobs/blobCheck";
-import BlobSync from "@/data/controls/blobs/blobSync";
-import BlobCreate from "@/data/controls/blobs/blobCreate";
-import BlobUpdate from "@/data/controls/blobs/blobUpdate";
+// import { verify } from "./logic";
+// import BlobCheck from "@/data/controls/blobs/blobCheck";
+// import BlobSync from "@/data/controls/blobs/blobSync";
+// import BlobCreate from "@/data/controls/blobs/blobCreate";
+// import BlobUpdate from "@/data/controls/blobs/blobUpdate";
 
 export async function POST(request: NextRequest) {
   // Forward all query string parameters from the incoming request
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   const url = `https://www.myfloridalicense.com/wl11.asp${search}`;
 
   const key = "florida";
-  const blobKey = `${key}Vets.json`;
+  // const blobKey = `${key}Vets.json`;
 
   try {
     const response = await fetch(url, {

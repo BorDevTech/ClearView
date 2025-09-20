@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       count: Array.isArray(data) ? data.length : 0,
     });
   } catch (error: unknown) {
-    console.warn(`⚠️ BlobFetch failed for ${key}, falling back to live parse`);
+    console.warn(`⚠️ BlobFetch failed for ${key}, falling back to live parse: ${error}`);
     // If blob does not exist, fetch and parse, then create/update blob
     ////
     try {
