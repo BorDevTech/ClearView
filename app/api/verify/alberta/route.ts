@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       headers: { "Content-Type": "application/json; charset=utf-8" },
       status: response.status,
     });
-  } catch (error) {
+  } catch (w) {
     console.warn(`⚠️ BlobFetch failed for ${key}, falling back to live parse`);
     // If blob does not exist, fetch and parse, then create/update blob
     ////

@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       headers: { "Content-Type": "text/html" },
       status: response.status,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     // Remove unused variable warning by using the error in the response
     return Response.json(
       {

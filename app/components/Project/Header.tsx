@@ -3,7 +3,6 @@ import {
   Heading,
   HStack,
   Icon,
-  Show,
   Status,
   Tag,
   Text,

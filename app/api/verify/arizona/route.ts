@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       headers: { "Content-Type": "application/json; charset=utf-8" },
       status: response.status,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     return Response.json(
       {
         error: error instanceof Error ? error.message : "Failed to fetch data",
