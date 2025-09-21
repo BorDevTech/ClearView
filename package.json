@@ -11,7 +11,10 @@
     "script": "tsx",
     "alberta:convertPDF": "tsx app/api/verify/alberta/convertPDF.ts",
     "alberta:convertCSV": "tsx app/api/verify/alberta/convertCSV.ts",
-    "alberta:test": "tsx app/api/verify/alberta/test.ts"
+    "alberta:test": "tsx app/api/verify/alberta/test.ts",
+    "lint:analyze": "tsx scripts/lint-automation/lint-analyzer.ts",
+    "lint:create-issues": "tsx scripts/lint-automation/github-issue-creator.ts",
+    "lint:auto": "npm run lint:analyze && npm run lint:create-issues"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.19.1",

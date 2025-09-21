@@ -40,3 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+# lint automation reports
+lint-analysis-report.json
+lint-analysis-report.md
+lint-output.json

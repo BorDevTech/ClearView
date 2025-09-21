@@ -1,0 +1,194 @@
+name: 🔧 Automated Lint Issue Detection
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      create_issues:
+        description: 'Create GitHub issues for lint problems'
+        required: false
+        default: 'true'
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  lint-analysis:
+    runs-on: ubuntu-latest
+    name: 🔍 Lint Analysis & Issue Creation
+    
+    outputs:
+      has-lint-issues: ${{ steps.analyze.outputs.has-issues }}
+      issues-count: ${{ steps.analyze.outputs.issues-count }}
+      report-url: ${{ steps.upload-artifacts.outputs.artifact-url }}
+
+    steps:
+      - name: 📦 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Run lint analysis
+        id: analyze
+        run: |
+          echo "🔍 Running comprehensive lint analysis..."
+          
+          # Run the lint analyzer
+          npx tsx scripts/lint-automation/lint-analyzer.ts || true
+          
+          # Check if we generated a report
+          if [ -f "lint-analysis-report.json" ]; then
+            ISSUES_COUNT=$(jq '.summary.totalIssues' lint-analysis-report.json)
+            echo "has-issues=true" >> $GITHUB_OUTPUT
+            echo "issues-count=${ISSUES_COUNT}" >> $GITHUB_OUTPUT
+            echo "📊 Found ${ISSUES_COUNT} lint issues"
+          else
+            echo "has-issues=false" >> $GITHUB_OUTPUT
+            echo "issues-count=0" >> $GITHUB_OUTPUT
+            echo "✅ No lint issues found!"
+          fi
+
+      - name: 📄 Upload lint analysis artifacts
+        id: upload-artifacts
+        if: steps.analyze.outputs.has-issues == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-analysis-report-${{ github.run_number }}
+          path: |
+            lint-analysis-report.json
+            lint-analysis-report.md
+          retention-days: 30
+
+      - name: 🎯 Create GitHub issues for lint problems
+        if: |
+          steps.analyze.outputs.has-issues == 'true' && (
+            (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+            (github.event_name == 'workflow_dispatch' && inputs.create_issues == true)
+          )
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPOSITORY_NAME: ${{ github.event.repository.name }}
+        run: |
+          echo "📝 Creating GitHub issues for lint problems..."
+          npx tsx scripts/lint-automation/github-issue-creator.ts
+
+      - name: 📋 Comment on PR with lint analysis
+        if: |
+          github.event_name == 'pull_request' && 
+          steps.analyze.outputs.has-issues == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              const report = JSON.parse(fs.readFileSync('lint-analysis-report.json', 'utf8'));
+              const markdown = fs.readFileSync('lint-analysis-report.md', 'utf8');
+              
+              // Create a summary for the PR comment
+              const summary = `## 🔧 Lint Analysis Results
+              
+              **Found ${report.summary.totalIssues} lint issues in ${report.summary.affectedFiles} files:**
+              - ❌ ${report.summary.errorCount} errors
+              - ⚠️ ${report.summary.warningCount} warnings
+              
+              ### Most Common Issues:
+              ${report.summary.commonPatterns.map(p => `- ${p}`).join('\n')}
+              
+              ### Immediate Actions Required:
+              ${report.recommendations.immediate.map(r => `- [ ] ${r}`).join('\n')}
+              
+              <details>
+              <summary>📄 Full Analysis Report</summary>
+              
+              ${markdown}
+              
+              </details>
+              
+              ---
+              🤖 *This analysis was automatically generated. Issues will be created on merge to main.*`;
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: summary
+              });
+            } catch (error) {
+              console.log('Could not post PR comment:', error.message);
+            }
+
+      - name: ❌ Fail build on lint errors
+        if: steps.analyze.outputs.has-issues == 'true'
+        run: |
+          echo "💥 Build failed due to lint issues!"
+          echo "📊 Found ${{ steps.analyze.outputs.issues-count }} lint issues"
+          echo "🔍 Check the analysis report for detailed information"
+          
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "ℹ️ GitHub issues will be created when this PR is merged to main"
+          else
+            echo "📝 GitHub issues should have been created for tracking"
+          fi
+          
+          exit 1
+
+  # Optional: Job to run only when lint issues are found and resolved
+  validation:
+    runs-on: ubuntu-latest
+    needs: lint-analysis
+    if: needs.lint-analysis.outputs.has-lint-issues == 'false'
+    
+    steps:
+      - name: ✅ Lint validation passed
+        run: |
+          echo "🎉 All lint checks passed!"
+          echo "✨ Code quality standards are maintained"
+
+  # Summary job for workflow status
+  summary:
+    runs-on: ubuntu-latest
+    needs: lint-analysis
+    if: always()
+    
+    steps:
+      - name: 📊 Workflow Summary
+        run: |
+          echo "## 🔧 Lint Automation Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.lint-analysis.outputs.has-lint-issues }}" = "true" ]; then
+            echo "❌ **Status:** Lint issues detected" >> $GITHUB_STEP_SUMMARY
+            echo "📊 **Issues Found:** ${{ needs.lint-analysis.outputs.issues-count }}" >> $GITHUB_STEP_SUMMARY
+            echo "🔍 **Analysis:** Complete - check artifacts for details" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+              echo "📝 **GitHub Issues:** Created for tracking and resolution" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "📝 **GitHub Issues:** Will be created on merge to main" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "✅ **Status:** All lint checks passed" >> $GITHUB_STEP_SUMMARY
+            echo "🎉 **Code Quality:** Maintained" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔄 Workflow Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
