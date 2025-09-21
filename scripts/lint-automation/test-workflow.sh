@@ -22,7 +22,7 @@ npm ci
 echo ""
 echo "🔍 Step 1: Running lint analysis..."
 echo "-----------------------------------"
-npm run lint:analyze || true
+npm run lint:analyze || LINT_EXIT_CODE=$?
 
 if [ -f "lint-analysis-report.json" ]; then
     ISSUES_COUNT=$(node -e "console.log(JSON.parse(require('fs').readFileSync('lint-analysis-report.json', 'utf8')).summary.totalIssues)")
@@ -30,10 +30,16 @@ if [ -f "lint-analysis-report.json" ]; then
     
     if [ "$ISSUES_COUNT" -eq "0" ]; then
         echo "✅ No lint issues found!"
+        echo ""
+        echo "✅ Lint automation test complete!"
+        echo "=================================================="
         exit 0
     fi
 else
     echo "✅ No lint issues found!"
+    echo ""
+    echo "✅ Lint automation test complete!"
+    echo "=================================================="
     exit 0
 fi
 
