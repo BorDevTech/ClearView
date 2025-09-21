@@ -30,6 +30,24 @@ interface ExampleConfig {
   exampleGenerator: (issue: AnalyzedIssue, identifier?: string) => string;
 }
 
+/**
+ * Configuration-based code example generation system.
+ * 
+ * This system replaces fragile string matching with robust pattern-based 
+ * identifier extraction from ESLint error messages.
+ * 
+ * To add support for a new rule:
+ * 1. Add a new ExampleConfig object to the getExampleConfigs() array
+ * 2. Define an identifierPattern regex to extract relevant identifiers
+ * 3. Implement an exampleGenerator function that uses the extracted identifier
+ * 
+ * Benefits over previous string matching approach:
+ * - More robust against ESLint message format changes
+ * - Extracts actual identifiers from error messages for personalized examples
+ * - Easily extensible configuration-based system
+ * - Maintains backward compatibility with legacy examples
+ */
+
 class GitHubIssueCreator {
   private token: string;
   private owner: string;
@@ -527,7 +545,16 @@ class GitHubIssueCreator {
     return body;
   }
 
-  // Configuration-based mapping for code examples
+  /**
+   * Get configuration-based example mappings for ESLint rules.
+   * 
+   * Each configuration defines:
+   * - ruleId: The ESLint rule identifier
+   * - identifierPattern: Optional regex to extract variable/parameter names from error messages
+   * - exampleGenerator: Function that generates code examples, optionally using extracted identifiers
+   * 
+   * @returns Array of ExampleConfig objects for supported rules
+   */
   private getExampleConfigs(): ExampleConfig[] {
     return [
       {
@@ -746,6 +773,17 @@ function example() {
     ];
   }
 
+  /**
+   * Generate code examples for ESLint rule violations.
+   * 
+   * Uses configuration-based approach with regex pattern matching to extract
+   * identifiers from error messages, falling back to legacy string matching
+   * for unconfigured rules.
+   * 
+   * @param ruleId - The ESLint rule identifier
+   * @param issue - The analyzed lint issue containing error details
+   * @returns Formatted markdown code example or empty string if not supported
+   */
   private generateCodeExample(ruleId: string, issue: AnalyzedIssue): string {
     // Find a matching config for the ruleId
     const config = this.getExampleConfigs().find(cfg => cfg.ruleId === ruleId);
@@ -762,6 +800,7 @@ function example() {
     }
 
     // Fallback to legacy string-based examples for backward compatibility
+    // TODO: Migrate remaining rules to configuration-based approach above
     const legacyExamples: Record<string, (issue: AnalyzedIssue) => string> = {
       '@typescript-eslint/no-unused-vars': (issue) => {
         const fileName = issue.file.split('/').pop() || 'file';
