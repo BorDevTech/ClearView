@@ -23,7 +23,7 @@ export async function verify({
   };
   const key = "arkansas";
   // 🔍 Internal helper: parse blob response
-  function parseBlob(raw: any): RawVetEntry[] {
+  function parseBlob(raw: RawVetEntry[] | { blob?: RawVetEntry[] }): RawVetEntry[] {
     return Array.isArray(raw) ? raw : raw.blob ?? [];
   }
   async function fetchDetailedReport(entry: RawVetEntry): Promise<VetResult> {

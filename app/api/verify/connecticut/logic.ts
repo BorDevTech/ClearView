@@ -24,7 +24,7 @@ export async function verify({
   };
   const key = "connecticut";
   // 🔍 Internal helper: parse blob response
-  function parseBlob(raw: any): RawVetEntry[] {
+  function parseBlob(raw: RawVetEntry[] | { blob?: RawVetEntry[] }): RawVetEntry[] {
     return Array.isArray(raw) ? raw : raw.blob ?? [];
   }
 

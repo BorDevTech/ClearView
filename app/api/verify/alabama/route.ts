@@ -1,4 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
+// import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import BlobSync from "@/data/controls/blobs/blobSync";
 import BlobCreate from "@/data/controls/blobs/blobCreate";
 import BlobUpdate from "@/data/controls/blobs/blobUpdate";
@@ -6,7 +7,8 @@ import BlobFetch from "@/data/controls/blobs/blobFetch";
 import BlobConvert from "@/data/controls/blobs/BlobConvert";
 import { verify } from "./logic"
 
-export async function GET(request: NextRequest) {
+export async function GET() {
+  // export async function GET(request: NextRequest) {
   // const { searchParams } = new URL(request.url);
   // const firstName = searchParams.get("firstname") || "";
   // const lastName = searchParams.get("lastname") || "";
@@ -28,6 +30,7 @@ export async function GET(request: NextRequest) {
       count: Array.isArray(data) ? data.length : 0,
     });
   } catch (error: unknown) {
+    console.warn(`⚠️ BlobFetch failed for ${key}, falling back to live parse: ${error}`);
     // If blob does not exist, fetch and parse, then create/update blob
     try {
       // 🌐 Fetch Alabama portal HTML
