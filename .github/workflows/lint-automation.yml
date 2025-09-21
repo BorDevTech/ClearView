@@ -49,12 +49,18 @@ jobs:
           # Run the lint analyzer
           npx tsx scripts/lint-automation/lint-analyzer.ts || true
           
-          # Check if we generated a report
+          # Check if we generated a report and if there are any issues
           if [ -f "lint-analysis-report.json" ]; then
             ISSUES_COUNT=$(jq '.summary.totalIssues' lint-analysis-report.json)
-            echo "has-issues=true" >> $GITHUB_OUTPUT
             echo "issues-count=${ISSUES_COUNT}" >> $GITHUB_OUTPUT
-            echo "📊 Found ${ISSUES_COUNT} lint issues"
+            
+            if [ "${ISSUES_COUNT}" -gt "0" ]; then
+              echo "has-issues=true" >> $GITHUB_OUTPUT
+              echo "📊 Found ${ISSUES_COUNT} lint issues"
+            else
+              echo "has-issues=false" >> $GITHUB_OUTPUT
+              echo "✅ No lint issues found!"
+            fi
           else
             echo "has-issues=false" >> $GITHUB_OUTPUT
             echo "issues-count=0" >> $GITHUB_OUTPUT
