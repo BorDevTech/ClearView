@@ -247,29 +247,32 @@ class LintAnalyzer {
     }).slice(0, 5); // Limit to 5 similar files
   }
 
-  private analyzePattern(issue: LintIssue, similarFiles: string[]): string {
-    // Check if similar files have the same issue
+  private analyzePattern(issue: LintIssue, similarFiles: string[], allLintIssues: LintIssue[]): string {
+    // Check if similar files have the same issue using ESLint output
     let patternCount = 0;
     const sampleFiles: string[] = [];
     
     for (const file of similarFiles) {
-      try {
-        const content = readFileSync(join(projectRoot, file), 'utf8');
-        
-        // Simple pattern detection based on rule type
-        let hasPattern = false;
-        if (issue.ruleId === '@typescript-eslint/no-explicit-any' && content.includes(': any')) {
-          hasPattern = true;
-        } else if (issue.ruleId === '@typescript-eslint/no-unused-vars' && content.match(/^\s*(const|let|var)\s+\w+.*=.*$/m)) {
-          hasPattern = true;
+      // For @typescript-eslint/no-unused-vars, check if the file has a reported issue with the same ruleId
+      let hasPattern = false;
+      if (issue.ruleId === '@typescript-eslint/no-unused-vars') {
+        hasPattern = allLintIssues.some(
+          (i) => i.file === file && i.ruleId === '@typescript-eslint/no-unused-vars'
+        );
+      } else if (issue.ruleId === '@typescript-eslint/no-explicit-any') {
+        try {
+          const content = readFileSync(join(projectRoot, file), 'utf8');
+          if (content.includes(': any')) {
+            hasPattern = true;
+          }
+        } catch {
+          // Skip files that can't be read
         }
-        
-        if (hasPattern) {
-          patternCount++;
-          sampleFiles.push(file);
-        }
-      } catch {
-        // Skip files that can't be read
+      }
+      
+      if (hasPattern) {
+        patternCount++;
+        sampleFiles.push(file);
       }
     }
     
