@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   // Forward the request to the DBPR endpoint with all params and form data
   const url = `https://www.myfloridalicense.com/wl11.asp${search}`;
 
-  const key = "florida";
+  // const key = "florida";
   // const blobKey = `${key}Vets.json`;
 
   try {

@@ -1,18 +1,6 @@
 import { VetResult } from "@/app/types/vet-result";
 
-interface VetRecord {
-  prc_first_name: string;
-  prc_middle_name: string;
-  prc_last_name: string;
-  prc_suffix: string;
-  lic_number: string;
-  lst_description: string;
-  les_description: string;
-  prc_dba_name: string;
-  lic_orig_issue_date: string;
-  lic_exp_date: string;
-  prc_entity_name: string;
-}
+
 
 export async function verify({
   firstName,

@@ -1,15 +1,6 @@
 import { VetResult } from "@/app/types/vet-result";
 
-interface VetRecord {
-  last_name: string;
-  first_name: string;
-  status: string;
-  license_number: string;
-  current: string;
-  issue_date: string;
-  expiration_date: string;
-  formatted_name: string;
-}
+
 
 export async function verify({
   firstName,
