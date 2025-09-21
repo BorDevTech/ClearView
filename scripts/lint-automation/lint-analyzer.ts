@@ -78,7 +78,7 @@ class LintAnalyzer {
     
     const lintOutput = this.runLint();
     const issues = this.parseLintOutput(lintOutput);
-    const analyzedIssues = issues.map(issue => this.analyzeIssue(issue));
+    const analyzedIssues = issues.map(issue => this.analyzeIssue(issue, issues));
     
     const report: IssueReport = {
       summary: this.generateSummary(analyzedIssues),
@@ -168,11 +168,11 @@ class LintAnalyzer {
     return issues;
   }
 
-  private analyzeIssue(issue: LintIssue): AnalyzedIssue {
+  private analyzeIssue(issue: LintIssue, allIssues: LintIssue[]): AnalyzedIssue {
     const category = this.categorizeIssue(issue);
     const analysis = this.getIssueAnalysis(issue);
     const similarFiles = this.findSimilarFiles(issue.file);
-    const patternAnalysis = this.analyzePattern(issue, similarFiles);
+    const patternAnalysis = this.analyzePattern(issue, similarFiles, allIssues);
 
     return {
       ...issue,
