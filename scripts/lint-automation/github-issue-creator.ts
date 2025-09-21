@@ -104,8 +104,186 @@ class GitHubIssueCreator {
     return false;
   }
 
+  async checkExistingRuleIssue(ruleId: string): Promise<{ number: number; title: string; body: string } | null> {
+    if (!this.token) return null;
+
+    try {
+      // Search for issues with the specific rule ID in the title
+      const searchQuery = `repo:${this.owner}/${this.repo}+is:issue+is:open+"Fix ${ruleId} violations"`;
+      const response = await fetch(
+        `${this.apiBase}/search/issues?q=${encodeURIComponent(searchQuery)}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'ClearView-Lint-Automation'
+          }
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.total_count > 0) {
+          const issue = data.items[0];
+          return {
+            number: issue.number,
+            title: issue.title,
+            body: issue.body
+          };
+        }
+      }
+    } catch (error) {
+      console.warn(`⚠️ Could not check existing issues for rule ${ruleId}:`, error);
+    }
+
+    return null;
+  }
+
+  async closeResolvedIssues(report: IssueReport): Promise<void> {
+    if (!this.token) {
+      console.log('🔍 Would check for resolved lint issues to close');
+      return;
+    }
+
+    try {
+      // Get all open lint issues created by automation
+      const response = await fetch(
+        `${this.apiBase}/search/issues?q=repo:${this.owner}/${this.repo}+is:issue+is:open+label:automated+label:lint`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'ClearView-Lint-Automation'
+          }
+        }
+      );
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+      const openLintIssues = data.items || [];
+
+      // Get current rule IDs from the report
+      const currentRuleIds = new Set(report.issues.map(issue => issue.ruleId));
+
+      for (const issue of openLintIssues) {
+        // Extract rule ID from issue title
+        const ruleIdMatch = issue.title.match(/Fix (.+?) violations/);
+        if (!ruleIdMatch) continue;
+
+        const ruleId = ruleIdMatch[1];
+
+        // If this rule is no longer in the current report, the issue is resolved
+        if (!currentRuleIds.has(ruleId)) {
+          await this.closeResolvedIssue(issue.number, ruleId);
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not check for resolved issues:', error);
+    }
+  }
+
+  async closeResolvedIssue(issueNumber: number, ruleId: string): Promise<void> {
+    if (!this.token) return;
+
+    try {
+      const response = await fetch(`${this.apiBase}/repos/${this.owner}/${this.repo}/issues/${issueNumber}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'ClearView-Lint-Automation'
+        },
+        body: JSON.stringify({
+          state: 'closed',
+          state_reason: 'completed'
+        })
+      });
+
+      if (response.ok) {
+        // Add a comment explaining the closure
+        await this.addCommentToIssue(issueNumber, `🎉 **Issue Resolved!**\n\nAll instances of \`${ruleId}\` violations have been fixed. This issue is now automatically closed.\n\n*Closed by ClearView Lint Automation on ${new Date().toISOString()}*`);
+        console.log(`✅ Closed resolved issue #${issueNumber} for rule ${ruleId}`);
+      } else {
+        console.warn(`⚠️ Failed to close issue #${issueNumber}:`, response.statusText);
+      }
+    } catch (error) {
+      console.warn(`⚠️ Could not close resolved issue #${issueNumber}:`, error);
+    }
+  }
+
+  async addCommentToIssue(issueNumber: number, comment: string): Promise<void> {
+    if (!this.token) return;
+
+    try {
+      await fetch(`${this.apiBase}/repos/${this.owner}/${this.repo}/issues/${issueNumber}/comments`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'ClearView-Lint-Automation'
+        },
+        body: JSON.stringify({ body: comment })
+      });
+    } catch (error) {
+      console.warn(`⚠️ Could not add comment to issue #${issueNumber}:`, error);
+    }
+  }
+
+  async updateExistingIssue(existingIssue: { number: number; title: string; body: string }, newGroup: any, ruleId: string): Promise<void> {
+    if (!this.token) {
+      console.log(`🔍 Would update existing issue #${existingIssue.number} for rule ${ruleId}`);
+      return;
+    }
+
+    try {
+      // Extract current instance count from existing title
+      const currentCountMatch = existingIssue.title.match(/\((\d+) instances?\)/);
+      const currentCount = currentCountMatch ? parseInt(currentCountMatch[1]) : 0;
+      
+      // Extract new instance count from new group title
+      const newCountMatch = newGroup.title.match(/\((\d+) instances?\)/);
+      const newCount = newCountMatch ? parseInt(newCountMatch[1]) : 0;
+
+      // Only update if the count has changed (indicating new violations or fixes)
+      if (newCount !== currentCount) {
+        const updatedTitle = `🔧 Fix ${ruleId} violations (${newCount} instances)`;
+        const updatedBody = `${newGroup.body}\n\n---\n\n**🔄 Issue Updated:** ${new Date().toISOString()}\n**Previous Count:** ${currentCount} instances\n**Current Count:** ${newCount} instances`;
+
+        const response = await fetch(`${this.apiBase}/repos/${this.owner}/${this.repo}/issues/${existingIssue.number}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'ClearView-Lint-Automation'
+          },
+          body: JSON.stringify({
+            title: updatedTitle,
+            body: updatedBody
+          })
+        });
+
+        if (response.ok) {
+          console.log(`✅ Updated existing issue #${existingIssue.number} for ${ruleId} (${currentCount} → ${newCount} instances)`);
+        } else {
+          console.warn(`⚠️ Failed to update issue #${existingIssue.number}:`, response.statusText);
+        }
+      } else {
+        console.log(`ℹ️ Issue #${existingIssue.number} for ${ruleId} already up to date (${newCount} instances)`);
+      }
+    } catch (error) {
+      console.warn(`⚠️ Could not update existing issue #${existingIssue.number}:`, error);
+    }
+  }
+
   async createIssuesFromReport(report: IssueReport): Promise<void> {
     console.log('📝 Creating GitHub issues from lint report...');
+
+    // Check for resolved issues and close them
+    await this.closeResolvedIssues(report);
 
     // Create a summary issue if there are multiple issues
     if (report.summary.totalIssues > 5) {
@@ -116,11 +294,16 @@ class GitHubIssueCreator {
     const issueGroups = this.groupIssuesForGitHub(report.issues);
 
     for (const group of issueGroups) {
-      const searchTerm = `lint-issue-${group.category.toLowerCase().replace(/\s+/g, '-')}`;
-      const existingIssue = await this.checkExistingIssues(searchTerm);
+      // Extract the rule ID from the title for more specific duplicate checking
+      const ruleIdMatch = group.title.match(/Fix (.+?) violations/);
+      const ruleId = ruleIdMatch ? ruleIdMatch[1] : group.category;
+      
+      const existingIssue = await this.checkExistingRuleIssue(ruleId);
 
       if (existingIssue) {
-        console.log(`⏭️ Skipping ${group.category} - issue already exists`);
+        console.log(`⏭️ Skipping ${ruleId} - issue already exists (#${existingIssue.number})`);
+        // Optionally update the existing issue with new information
+        await this.updateExistingIssue(existingIssue, group, ruleId);
         continue;
       }
 

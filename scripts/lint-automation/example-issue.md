@@ -1,4 +1,4 @@
-# Example: Automated GitHub Issue
+# Example: Enhanced Automated GitHub Issue with Duplicate Prevention
 
 ## 🔧 ESLint Rule Violation: `@typescript-eslint/no-unused-vars`
 
@@ -83,6 +83,16 @@ interface _VetRecord {  // ← Prefixed to indicate intentionally unused
 - **Category:** Code Quality
 - **Severity:** error
 - **Auto-generated:** 2024-12-21T21:30:00.000Z
+
+### 🔄 Enhanced Duplicate Prevention
+
+This issue uses **intelligent duplicate detection** that:
+- ✅ **Prevents duplicate issues** for the same lint rule
+- ✅ **Updates existing issues** when violation counts change
+- ✅ **Automatically closes issues** when all violations are resolved
+- ✅ **Tracks progress** with detailed update comments
+
+If you see this issue updated automatically, it means new violations of this rule were detected or existing ones were fixed.
 
 ---
 
