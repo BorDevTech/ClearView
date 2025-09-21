@@ -13,7 +13,7 @@ echo "🚀 Starting ClearView Lint Automation Test..."
 echo "=================================================="
 
 # Change to project root
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 echo ""
 echo "📦 Installing dependencies..."
