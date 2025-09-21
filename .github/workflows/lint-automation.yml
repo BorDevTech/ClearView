@@ -74,9 +74,10 @@ jobs:
 
       - name: 🎯 Create GitHub issues for lint problems
         if: |
-          steps.analyze.outputs.has-issues == 'true' && 
-          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-          (github.event_name == 'workflow_dispatch' && inputs.create_issues == true)
+          steps.analyze.outputs.has-issues == 'true' && (
+            (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+            (github.event_name == 'workflow_dispatch' && inputs.create_issues == true)
+          )
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
