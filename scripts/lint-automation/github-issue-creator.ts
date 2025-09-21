@@ -556,7 +556,11 @@ All instances of \`${ruleId}\` violations have been fixed. This issue is now aut
     type ExampleConfig = {
       ruleId: string;
       identifierPattern?: RegExp;
-      exampleGenerator: (issue: AnalyzedIssue, identifier?: string) => string;
+      contextPatterns?: {
+        pattern: RegExp;
+        exampleType: string;
+      }[];
+      exampleGenerator: (issue: AnalyzedIssue, identifier?: string, context?: string) => string;
     };
 
     const exampleConfigs: ExampleConfig[] = [
@@ -564,17 +568,27 @@ All instances of \`${ruleId}\` violations have been fixed. This issue is now aut
         ruleId: '@typescript-eslint/no-unused-vars',
         // Regex to extract the unused variable/interface name from the message
         identifierPattern: /'([^']+)' is (defined but never used|assigned a value but never used)/,
-        exampleGenerator: (issue, identifier) => {
-          // Use the identifier in the example, fallback to a generic name if not found
+        // Context patterns to determine the type of example to show
+        contextPatterns: [
+          { pattern: /interface\s+\w+/i, exampleType: 'interface' },
+          { pattern: /const\s+{\s*\w+\s*}\s*=.*URL/i, exampleType: 'url-destructuring' },
+          { pattern: /const\s+\w+\s*=.*["']\w+["']/i, exampleType: 'string-constant' },
+          { pattern: /function\s+\w+\s*\(/i, exampleType: 'function-param' },
+          { pattern: /=>\s*{/i, exampleType: 'arrow-function' }
+        ],
+        exampleGenerator: (issue, identifier, context) => {
           const unusedName = identifier || 'UnusedIdentifier';
           
-          if (issue.message.includes('VetRecord') || unusedName.includes('VetRecord')) {
+          // Determine context from file path and source code patterns
+          const isInterface = context === 'interface' || issue.message.includes('interface') || /^[A-Z]/.test(unusedName);
+          const isURLParams = context === 'url-destructuring' || unusedName.toLowerCase().includes('param');
+          const isConstant = context === 'string-constant' || unusedName === 'key';
+          
+          if (isInterface) {
             return `#### 💡 Code Example
 
 **❌ Before (causes lint error):**
 \`\`\`typescript
-import { VetResult } from "@/app/types/vet-result";
-
 interface ${unusedName} {  // ← This interface is defined but never used
   first_name: string;
   last_name: string;
@@ -588,8 +602,6 @@ export async function verify() {
 
 **✅ After (fixed):**
 \`\`\`typescript
-import { VetResult } from "@/app/types/vet-result";
-
 // Option 1: Remove the unused interface entirely
 export async function verify() {
   // Implementation 
@@ -601,18 +613,27 @@ interface _${unusedName} {  // ← Prefixed to indicate intentionally unused
   last_name: string;
   // ... other properties
 }
+
+// Option 3: Use the interface in your code
+interface ${unusedName} {
+  first_name: string;
+  last_name: string;
+}
+
+export async function verify(): Promise<${unusedName}[]> {
+  // Use the interface as return type or parameter
+  return [];
+}
 \`\`\`
 
 `;
-          } else if (issue.message.includes('searchParams') || unusedName.includes('searchParams')) {
+          } else if (isURLParams) {
             return `#### 💡 Code Example
 
 **❌ Before (causes lint error):**
 \`\`\`typescript
 export async function GET(request: NextRequest) {
   const { ${unusedName} } = new URL(request.url);  // ← Assigned but never used
-  // const firstName = ${unusedName}.get("firstname") || "";
-  // const lastName = ${unusedName}.get("lastname") || "";
   
   const key = "state-name";
   // ... rest of implementation
@@ -626,25 +647,25 @@ export async function GET(request: NextRequest) {
   const key = "state-name";
   // ... rest of implementation
 
-  // Option 2: If you need it later, use it immediately
+  // Option 2: Use the URL parameters
   const { ${unusedName} } = new URL(request.url);
   const firstName = ${unusedName}.get("firstname") || "";
   const lastName = ${unusedName}.get("lastname") || "";
   
-  // ... use firstName, lastName in implementation
+  // ... use parameters in implementation
 }
 \`\`\`
 
 `;
-          } else if (issue.message.includes('key') || unusedName === 'key') {
+          } else if (isConstant) {
             return `#### 💡 Code Example
 
 **❌ Before (causes lint error):**
 \`\`\`typescript
 export async function GET(request: NextRequest) {
-  const ${unusedName} = "florida";  // ← Assigned but never used
+  const ${unusedName} = "some-value";  // ← Assigned but never used
   
-  // Implementation without using ${unusedName} variable
+  // Implementation without using the ${unusedName} variable
   const response = await fetch(someUrl);
   return response;
 }
@@ -657,8 +678,8 @@ export async function GET(request: NextRequest) {
   const response = await fetch(someUrl);
   return response;
 
-  // Option 2: Use the ${unusedName} variable in implementation
-  const ${unusedName} = "florida";
+  // Option 2: Use the variable in implementation
+  const ${unusedName} = "some-value";
   const response = await fetch(\`/api/verify/\${${unusedName}}\`);
   return response;
 }
@@ -667,13 +688,13 @@ export async function GET(request: NextRequest) {
 `;
           }
           
-          // Generic unused variable example
+          // Generic unused variable example for other cases
           return `#### 💡 Code Example
 
 **❌ Before (causes lint error):**
 \`\`\`typescript
 function example() {
-  const ${unusedName} = "some value";  // ← Never used
+  const ${unusedName} = "some value";  // ← Variable defined but never used
   return "result";
 }
 \`\`\`
@@ -699,93 +720,131 @@ function example() {
       },
       {
         ruleId: '@typescript-eslint/no-explicit-any',
-        exampleGenerator: (issue) => {
-          if (issue.message.includes('parseBlob')) {
-            return `#### 💡 Code Example
-
-**❌ Before (causes lint error):**
-\`\`\`typescript
-function parseBlob(raw: any): RawVetEntry[] {  // ← Using 'any' type
-  return Array.isArray(raw) ? raw : raw.blob ?? [];
-}
-\`\`\`
-
-**✅ After (fixed):**
-\`\`\`typescript
-// Option 1: Define a proper interface for the raw data
-interface ApiResponse {
-  blob?: RawVetEntry[];
-}
-
-function parseBlob(raw: ApiResponse | RawVetEntry[]): RawVetEntry[] {
-  return Array.isArray(raw) ? raw : raw.blob ?? [];
-}
-
-// Option 2: Use 'unknown' for safer type handling
-function parseBlob(raw: unknown): RawVetEntry[] {
-  if (Array.isArray(raw)) return raw;
-  if (typeof raw === 'object' && raw !== null && 'blob' in raw) {
-    return (raw as { blob?: RawVetEntry[] }).blob ?? [];
-  }
-  return [];
-}
-\`\`\`
-
-`;
-          }
+        identifierPattern: /Unexpected any\./,
+        contextPatterns: [
+          { pattern: /function\s+\w+\s*\([^)]*:\s*any/i, exampleType: 'function-param' },
+          { pattern: /:\s*any\s*\)/i, exampleType: 'return-type' },
+          { pattern: /const\s+\w+\s*:\s*any/i, exampleType: 'variable-type' }
+        ],
+        exampleGenerator: (issue, identifier, context) => {
+          // Try to extract function name or variable name from the issue context
+          const functionMatch = issue.source?.match(/function\s+(\w+)/i);
+          const variableMatch = issue.source?.match(/(?:const|let|var)\s+(\w+)/i);
+          const paramMatch = issue.source?.match(/(\w+)\s*:\s*any/i);
+          
+          const functionName = functionMatch?.[1] || 'processData';
+          const variableName = variableMatch?.[1] || paramMatch?.[1] || 'data';
           
           return `#### 💡 Code Example
 
 **❌ Before (causes lint error):**
 \`\`\`typescript
-function processData(data: any) {  // ← Using 'any' defeats type safety
-  return data.someProperty;
+function ${functionName}(${variableName}: any) {  // ← Using 'any' defeats type safety
+  return ${variableName}.someProperty;
 }
 \`\`\`
 
 **✅ After (fixed):**
 \`\`\`typescript
-// Option 1: Define proper interface
+// Option 1: Define proper interface for known structure
 interface DataStructure {
   someProperty: string;
   // ... other known properties
 }
 
-function processData(data: DataStructure) {
-  return data.someProperty;
+function ${functionName}(${variableName}: DataStructure) {
+  return ${variableName}.someProperty;
 }
 
-// Option 2: Use generic type
-function processData<T extends { someProperty: string }>(data: T) {
-  return data.someProperty;
+// Option 2: Use generic type for flexible typing
+function ${functionName}<T extends { someProperty: string }>(${variableName}: T) {
+  return ${variableName}.someProperty;
 }
 
-// Option 3: Use 'unknown' for external APIs
-function processData(data: unknown) {
-  if (typeof data === 'object' && data !== null && 'someProperty' in data) {
-    return (data as { someProperty: string }).someProperty;
+// Option 3: Use 'unknown' for safer handling of external data
+function ${functionName}(${variableName}: unknown) {
+  if (typeof ${variableName} === 'object' && ${variableName} !== null && 'someProperty' in ${variableName}) {
+    return (${variableName} as { someProperty: string }).someProperty;
   }
   throw new Error('Invalid data structure');
+}
+
+// Option 4: For array/object union types (like API responses)
+type ApiResponse = SomeType[] | { data: SomeType[] };
+function ${functionName}(${variableName}: ApiResponse) {
+  return Array.isArray(${variableName}) ? ${variableName} : ${variableName}.data;
+}
+\`\`\`
+
+`;
+        }
+      },
+      {
+        ruleId: '@typescript-eslint/no-unused-imports',
+        identifierPattern: /'([^']+)' is defined but never used/,
+        exampleGenerator: (issue, identifier) => {
+          const importName = identifier || 'UnusedImport';
+          
+          return `#### 💡 Code Example
+
+**❌ Before (causes lint error):**
+\`\`\`typescript
+import { ${importName}, SomeOtherType } from './types';  // ← ${importName} is imported but never used
+
+export function example(): SomeOtherType {
+  // Implementation using only SomeOtherType
+}
+\`\`\`
+
+**✅ After (fixed):**
+\`\`\`typescript
+import { SomeOtherType } from './types';  // ← Removed unused import
+
+export function example(): SomeOtherType {
+  // Implementation using only SomeOtherType
+}
+
+// Alternative: Use the import if it's actually needed
+import { ${importName}, SomeOtherType } from './types';
+
+export function example(): SomeOtherType {
+  // Use ${importName} in your implementation
+  const processed: ${importName} = processData();
+  return processed as SomeOtherType;
 }
 \`\`\`
 
 `;
         }
       }
-      // Add more rule configs here as needed
+      // Add more rule configurations here as needed
     ];
 
     // Find a matching config for the ruleId
     const config = exampleConfigs.find(cfg => cfg.ruleId === ruleId);
     if (config) {
       let identifier: string | undefined = undefined;
+      let context: string | undefined = undefined;
+      
+      // Extract identifier from the error message using regex
       if (config.identifierPattern) {
         const match = issue.message.match(config.identifierPattern);
         if (match && match[1]) {
           identifier = match[1];
         }
       }
-      return config.exampleGenerator(issue, identifier);
+      
+      // Determine context based on source code patterns
+      if (config.contextPatterns && issue.source) {
+        for (const contextPattern of config.contextPatterns) {
+          if (contextPattern.pattern.test(issue.source)) {
+            context = contextPattern.exampleType;
+            break;
+          }
+        }
+      }
+      
+      return config.exampleGenerator(issue, identifier, context);
     }
     
     // Default: no example available
