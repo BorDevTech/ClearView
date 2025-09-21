@@ -250,7 +250,7 @@ class GitHubIssueCreator {
       // Only update if the count has changed (indicating new violations or fixes)
       if (newCount !== currentCount) {
         const updatedTitle = `🔧 Fix ${ruleId} violations (${newCount} instances)`;
-        const updatedBody = `${newGroup.body}\n\n---\n\n**🔄 Issue Updated:** ${new Date().toISOString()}\n**Previous Count:** ${currentCount} instances\n**Current Count:** ${newCount} instances`;
+        const updatedBody = this.generateUpdatedIssueBody(newGroup.body, currentCount, newCount);
 
         const response = await fetch(`${this.apiBase}/repos/${this.owner}/${this.repo}/issues/${existingIssue.number}`, {
           method: 'PATCH',
@@ -730,6 +730,10 @@ function processData(data: unknown) {
 
     const generator = examples[ruleId];
     return generator ? generator(issue) : '';
+  }
+
+  private generateUpdatedIssueBody(newGroupBody: string, currentCount: number, newCount: number): string {
+    return `${newGroupBody}\n\n---\n\n**🔄 Issue Updated:** ${new Date().toISOString()}\n**Previous Count:** ${currentCount} instances\n**Current Count:** ${newCount} instances`;
   }
 
   private getAdditionalRuleContext(ruleId: string): string {
