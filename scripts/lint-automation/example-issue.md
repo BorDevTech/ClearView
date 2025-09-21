@@ -1,4 +1,4 @@
-# Example: Automated GitHub Issue
+# Example: Enhanced Automated GitHub Issue with Duplicate Prevention
 
 ## 🔧 ESLint Rule Violation: `@typescript-eslint/no-unused-vars`
 
@@ -29,6 +29,41 @@
 
 ### 🛠️ How to Fix
 
+#### 💡 Code Example
+
+**❌ Before (causes lint error):**
+```typescript
+import { VetResult } from "@/app/types/vet-result";
+
+interface VetRecord {  // ← This interface is defined but never used
+  first_name: string;
+  last_name: string;
+  // ... other properties
+}
+
+export async function verify() {
+  // Implementation without using VetRecord
+}
+```
+
+**✅ After (fixed):**
+```typescript
+import { VetResult } from "@/app/types/vet-result";
+
+// Option 1: Remove the unused interface entirely
+export async function verify() {
+  // Implementation 
+}
+
+// Option 2: If you plan to use it later, prefix with underscore
+interface _VetRecord {  // ← Prefixed to indicate intentionally unused
+  first_name: string;
+  last_name: string;
+  // ... other properties
+}
+```
+
+#### Step-by-Step Instructions:
 1. **Review each affected file** listed above
 2. **Apply the suggested solution** for each instance
 3. **Test the changes** to ensure functionality is preserved
@@ -48,6 +83,16 @@
 - **Category:** Code Quality
 - **Severity:** error
 - **Auto-generated:** 2024-12-21T21:30:00.000Z
+
+### 🔄 Enhanced Duplicate Prevention
+
+This issue uses **intelligent duplicate detection** that:
+- ✅ **Prevents duplicate issues** for the same lint rule
+- ✅ **Updates existing issues** when violation counts change
+- ✅ **Automatically closes issues** when all violations are resolved
+- ✅ **Tracks progress** with detailed update comments
+
+If you see this issue updated automatically, it means new violations of this rule were detected or existing ones were fixed.
 
 ---
 
