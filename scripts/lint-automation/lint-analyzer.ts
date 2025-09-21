@@ -104,8 +104,12 @@ class LintAnalyzer {
         // Fallback: run lint and capture output directly
         try {
           return execSync('npm run lint', { cwd: projectRoot, encoding: 'utf8' });
-        } catch (lintError: any) {
-          return lintError.stdout || lintError.message || '';
+        } catch (lintError: unknown) {
+          if (typeof lintError === 'object' && lintError !== null) {
+            const err = lintError as { stdout?: string; message?: string };
+            return err.stdout || err.message || '';
+          }
+          return '';
         }
       }
     }
