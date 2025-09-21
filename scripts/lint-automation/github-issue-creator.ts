@@ -345,6 +345,11 @@ class GitHubIssueCreator {
     }
   }
 
+  /**
+   * Generates a standardized comment for when lint issues are automatically resolved.
+   * @param ruleId - The ESLint rule ID that was resolved
+   * @returns Formatted comment explaining the automatic closure
+   */
   private generateResolvedIssueComment(ruleId: string): string {
     return `🎉 **Issue Resolved!**
 
@@ -353,6 +358,13 @@ All instances of \`${ruleId}\` violations have been fixed. This issue is now aut
 *Closed by ClearView Lint Automation on ${new Date().toISOString()}*`;
   }
 
+  /**
+   * Generates an updated issue body with metadata about the change.
+   * @param newGroupBody - The new issue body content
+   * @param currentCount - Previous number of violations
+   * @param newCount - Current number of violations
+   * @returns Updated issue body with change metadata
+   */
   private generateUpdatedIssueBody(newGroupBody: string, currentCount: number, newCount: number): string {
     return `${newGroupBody}
 
