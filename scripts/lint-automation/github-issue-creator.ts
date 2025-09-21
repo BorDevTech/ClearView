@@ -306,8 +306,16 @@ class GitHubIssueCreator {
       }
     }
 
-    // Fix instructions
+    // Fix instructions with code examples
     body += `### 🛠️ How to Fix\n\n`;
+    
+    // Add specific code examples for this rule
+    const codeExample = this.generateCodeExample(ruleId, issues[0]);
+    if (codeExample) {
+      body += codeExample;
+    }
+    
+    body += `#### Step-by-Step Instructions:\n`;
     body += `1. **Review each affected file** listed above\n`;
     body += `2. **Apply the suggested solution** for each instance\n`;
     body += `3. **Test the changes** to ensure functionality is preserved\n`;
@@ -327,6 +335,218 @@ class GitHubIssueCreator {
     body += `- **Auto-generated:** ${new Date().toISOString()}\n`;
 
     return body;
+  }
+
+  private generateCodeExample(ruleId: string, issue: AnalyzedIssue): string {
+    const examples: Record<string, (issue: AnalyzedIssue) => string> = {
+      '@typescript-eslint/no-unused-vars': (issue) => {
+        const fileName = issue.file.split('/').pop() || 'file';
+        
+        if (issue.message.includes('VetRecord')) {
+          return `#### 💡 Code Example
+
+**❌ Before (causes lint error):**
+\`\`\`typescript
+import { VetResult } from "@/app/types/vet-result";
+
+interface VetRecord {  // ← This interface is defined but never used
+  first_name: string;
+  last_name: string;
+  // ... other properties
+}
+
+export async function verify() {
+  // Implementation without using VetRecord
+}
+\`\`\`
+
+**✅ After (fixed):**
+\`\`\`typescript
+import { VetResult } from "@/app/types/vet-result";
+
+// Option 1: Remove the unused interface entirely
+export async function verify() {
+  // Implementation 
+}
+
+// Option 2: If you plan to use it later, prefix with underscore
+interface _VetRecord {  // ← Prefixed to indicate intentionally unused
+  first_name: string;
+  last_name: string;
+  // ... other properties
+}
+\`\`\`
+
+`;
+        } else if (issue.message.includes('searchParams')) {
+          return `#### 💡 Code Example
+
+**❌ Before (causes lint error):**
+\`\`\`typescript
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);  // ← Assigned but never used
+  // const firstName = searchParams.get("firstname") || "";
+  // const lastName = searchParams.get("lastname") || "";
+  
+  const key = "state-name";
+  // ... rest of implementation
+}
+\`\`\`
+
+**✅ After (fixed):**
+\`\`\`typescript
+export async function GET(request: NextRequest) {
+  // Option 1: Remove if truly not needed
+  const key = "state-name";
+  // ... rest of implementation
+
+  // Option 2: If you need it later, use it immediately
+  const { searchParams } = new URL(request.url);
+  const firstName = searchParams.get("firstname") || "";
+  const lastName = searchParams.get("lastname") || "";
+  
+  // ... use firstName, lastName in implementation
+}
+\`\`\`
+
+`;
+        } else if (issue.message.includes('key')) {
+          return `#### 💡 Code Example
+
+**❌ Before (causes lint error):**
+\`\`\`typescript
+export async function GET(request: NextRequest) {
+  const key = "florida";  // ← Assigned but never used
+  
+  // Implementation without using key variable
+  const response = await fetch(someUrl);
+  return response;
+}
+\`\`\`
+
+**✅ After (fixed):**
+\`\`\`typescript
+export async function GET(request: NextRequest) {
+  // Option 1: Remove if not needed
+  const response = await fetch(someUrl);
+  return response;
+
+  // Option 2: Use the key variable in implementation
+  const key = "florida";
+  const response = await fetch(\`/api/verify/\${key}\`);
+  return response;
+}
+\`\`\`
+
+`;
+        }
+        
+        // Generic unused variable example
+        return `#### 💡 Code Example
+
+**❌ Before (causes lint error):**
+\`\`\`typescript
+function example() {
+  const unusedVariable = "some value";  // ← Never used
+  return "result";
+}
+\`\`\`
+
+**✅ After (fixed):**
+\`\`\`typescript
+function example() {
+  // Option 1: Remove unused variable
+  return "result";
+
+  // Option 2: Use the variable
+  const usedVariable = "some value";
+  return usedVariable;
+
+  // Option 3: Prefix with underscore if intentionally unused
+  const _unusedVariable = "some value";
+  return "result";
+}
+\`\`\`
+
+`;
+      },
+
+      '@typescript-eslint/no-explicit-any': (issue) => {
+        if (issue.message.includes('parseBlob')) {
+          return `#### 💡 Code Example
+
+**❌ Before (causes lint error):**
+\`\`\`typescript
+function parseBlob(raw: any): RawVetEntry[] {  // ← Using 'any' type
+  return Array.isArray(raw) ? raw : raw.blob ?? [];
+}
+\`\`\`
+
+**✅ After (fixed):**
+\`\`\`typescript
+// Option 1: Define a proper interface for the raw data
+interface ApiResponse {
+  blob?: RawVetEntry[];
+}
+
+function parseBlob(raw: ApiResponse | RawVetEntry[]): RawVetEntry[] {
+  return Array.isArray(raw) ? raw : raw.blob ?? [];
+}
+
+// Option 2: Use 'unknown' for safer type handling
+function parseBlob(raw: unknown): RawVetEntry[] {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'object' && raw !== null && 'blob' in raw) {
+    return (raw as { blob?: RawVetEntry[] }).blob ?? [];
+  }
+  return [];
+}
+\`\`\`
+
+`;
+        }
+        
+        return `#### 💡 Code Example
+
+**❌ Before (causes lint error):**
+\`\`\`typescript
+function processData(data: any) {  // ← Using 'any' defeats type safety
+  return data.someProperty;
+}
+\`\`\`
+
+**✅ After (fixed):**
+\`\`\`typescript
+// Option 1: Define proper interface
+interface DataStructure {
+  someProperty: string;
+  // ... other known properties
+}
+
+function processData(data: DataStructure) {
+  return data.someProperty;
+}
+
+// Option 2: Use generic type
+function processData<T extends { someProperty: string }>(data: T) {
+  return data.someProperty;
+}
+
+// Option 3: Use 'unknown' for external APIs
+function processData(data: unknown) {
+  if (typeof data === 'object' && data !== null && 'someProperty' in data) {
+    return (data as { someProperty: string }).someProperty;
+  }
+  throw new Error('Invalid data structure');
+}
+\`\`\`
+
+`;
+      }
+    };
+
+    const generator = examples[ruleId];
+    return generator ? generator(issue) : '';
   }
 
   private getAdditionalRuleContext(ruleId: string): string {
