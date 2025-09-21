@@ -203,7 +203,8 @@ class GitHubIssueCreator {
 
       if (response.ok) {
         // Add a comment explaining the closure
-        await this.addCommentToIssue(issueNumber, `🎉 **Issue Resolved!**\n\nAll instances of \`${ruleId}\` violations have been fixed. This issue is now automatically closed.\n\n*Closed by ClearView Lint Automation on ${new Date().toISOString()}*`);
+        const resolvedComment = this.generateResolvedIssueComment(ruleId);
+        await this.addCommentToIssue(issueNumber, resolvedComment);
         console.log(`✅ Closed resolved issue #${issueNumber} for rule ${ruleId}`);
       } else {
         console.warn(`⚠️ Failed to close issue #${issueNumber}:`, response.statusText);
@@ -232,7 +233,7 @@ class GitHubIssueCreator {
     }
   }
 
-  async updateExistingIssue(existingIssue: { number: number; title: string; body: string }, newGroup: any, ruleId: string): Promise<void> {
+  async updateExistingIssue(existingIssue: { number: number; title: string; body: string }, newGroup: { title: string; body: string }, ruleId: string): Promise<void> {
     if (!this.token) {
       console.log(`🔍 Would update existing issue #${existingIssue.number} for rule ${ruleId}`);
       return;
@@ -250,7 +251,7 @@ class GitHubIssueCreator {
       // Only update if the count has changed (indicating new violations or fixes)
       if (newCount !== currentCount) {
         const updatedTitle = `🔧 Fix ${ruleId} violations (${newCount} instances)`;
-        const updatedBody = `${newGroup.body}\n\n---\n\n**🔄 Issue Updated:** ${new Date().toISOString()}\n**Previous Count:** ${currentCount} instances\n**Current Count:** ${newCount} instances`;
+        const updatedBody = this.generateUpdatedIssueBody(newGroup.body, currentCount, newCount);
 
         const response = await fetch(`${this.apiBase}/repos/${this.owner}/${this.repo}/issues/${existingIssue.number}`, {
           method: 'PATCH',
@@ -342,6 +343,24 @@ class GitHubIssueCreator {
     if (issue) {
       console.log(`✅ Created summary issue #${issue.number}`);
     }
+  }
+
+  private generateResolvedIssueComment(ruleId: string): string {
+    return `🎉 **Issue Resolved!**
+
+All instances of \`${ruleId}\` violations have been fixed. This issue is now automatically closed.
+
+*Closed by ClearView Lint Automation on ${new Date().toISOString()}*`;
+  }
+
+  private generateUpdatedIssueBody(newGroupBody: string, currentCount: number, newCount: number): string {
+    return `${newGroupBody}
+
+---
+
+**🔄 Issue Updated:** ${new Date().toISOString()}
+**Previous Count:** ${currentCount} instances
+**Current Count:** ${newCount} instances`;
   }
 
   private groupIssuesForGitHub(issues: AnalyzedIssue[]): Array<{
@@ -521,25 +540,37 @@ class GitHubIssueCreator {
   }
 
   private generateCodeExample(ruleId: string, issue: AnalyzedIssue): string {
-    const examples: Record<string, (issue: AnalyzedIssue) => string> = {
-      '@typescript-eslint/no-unused-vars': (issue) => {
-        const fileName = issue.file.split('/').pop() || 'file';
-        
-        if (issue.message.includes('VetRecord')) {
-          return `#### 💡 Code Example
+    // Configuration-based mapping for code examples
+    type ExampleConfig = {
+      ruleId: string;
+      identifierPattern?: RegExp;
+      exampleGenerator: (issue: AnalyzedIssue, identifier?: string) => string;
+    };
+
+    const exampleConfigs: ExampleConfig[] = [
+      {
+        ruleId: '@typescript-eslint/no-unused-vars',
+        // Regex to extract the unused variable/interface name from the message
+        identifierPattern: /'([^']+)' is (defined but never used|assigned a value but never used)/,
+        exampleGenerator: (issue, identifier) => {
+          // Use the identifier in the example, fallback to a generic name if not found
+          const unusedName = identifier || 'UnusedIdentifier';
+          
+          if (issue.message.includes('VetRecord') || unusedName.includes('VetRecord')) {
+            return `#### 💡 Code Example
 
 **❌ Before (causes lint error):**
 \`\`\`typescript
 import { VetResult } from "@/app/types/vet-result";
 
-interface VetRecord {  // ← This interface is defined but never used
+interface ${unusedName} {  // ← This interface is defined but never used
   first_name: string;
   last_name: string;
   // ... other properties
 }
 
 export async function verify() {
-  // Implementation without using VetRecord
+  // Implementation without using ${unusedName}
 }
 \`\`\`
 
@@ -553,7 +584,7 @@ export async function verify() {
 }
 
 // Option 2: If you plan to use it later, prefix with underscore
-interface _VetRecord {  // ← Prefixed to indicate intentionally unused
+interface _${unusedName} {  // ← Prefixed to indicate intentionally unused
   first_name: string;
   last_name: string;
   // ... other properties
@@ -561,15 +592,15 @@ interface _VetRecord {  // ← Prefixed to indicate intentionally unused
 \`\`\`
 
 `;
-        } else if (issue.message.includes('searchParams')) {
-          return `#### 💡 Code Example
+          } else if (issue.message.includes('searchParams') || unusedName.includes('searchParams')) {
+            return `#### 💡 Code Example
 
 **❌ Before (causes lint error):**
 \`\`\`typescript
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);  // ← Assigned but never used
-  // const firstName = searchParams.get("firstname") || "";
-  // const lastName = searchParams.get("lastname") || "";
+  const { ${unusedName} } = new URL(request.url);  // ← Assigned but never used
+  // const firstName = ${unusedName}.get("firstname") || "";
+  // const lastName = ${unusedName}.get("lastname") || "";
   
   const key = "state-name";
   // ... rest of implementation
@@ -584,24 +615,24 @@ export async function GET(request: NextRequest) {
   // ... rest of implementation
 
   // Option 2: If you need it later, use it immediately
-  const { searchParams } = new URL(request.url);
-  const firstName = searchParams.get("firstname") || "";
-  const lastName = searchParams.get("lastname") || "";
+  const { ${unusedName} } = new URL(request.url);
+  const firstName = ${unusedName}.get("firstname") || "";
+  const lastName = ${unusedName}.get("lastname") || "";
   
   // ... use firstName, lastName in implementation
 }
 \`\`\`
 
 `;
-        } else if (issue.message.includes('key')) {
-          return `#### 💡 Code Example
+          } else if (issue.message.includes('key') || unusedName === 'key') {
+            return `#### 💡 Code Example
 
 **❌ Before (causes lint error):**
 \`\`\`typescript
 export async function GET(request: NextRequest) {
-  const key = "florida";  // ← Assigned but never used
+  const ${unusedName} = "florida";  // ← Assigned but never used
   
-  // Implementation without using key variable
+  // Implementation without using ${unusedName} variable
   const response = await fetch(someUrl);
   return response;
 }
@@ -614,23 +645,23 @@ export async function GET(request: NextRequest) {
   const response = await fetch(someUrl);
   return response;
 
-  // Option 2: Use the key variable in implementation
-  const key = "florida";
-  const response = await fetch(\`/api/verify/\${key}\`);
+  // Option 2: Use the ${unusedName} variable in implementation
+  const ${unusedName} = "florida";
+  const response = await fetch(\`/api/verify/\${${unusedName}}\`);
   return response;
 }
 \`\`\`
 
 `;
-        }
-        
-        // Generic unused variable example
-        return `#### 💡 Code Example
+          }
+          
+          // Generic unused variable example
+          return `#### 💡 Code Example
 
 **❌ Before (causes lint error):**
 \`\`\`typescript
 function example() {
-  const unusedVariable = "some value";  // ← Never used
+  const ${unusedName} = "some value";  // ← Never used
   return "result";
 }
 \`\`\`
@@ -642,21 +673,23 @@ function example() {
   return "result";
 
   // Option 2: Use the variable
-  const usedVariable = "some value";
-  return usedVariable;
+  const ${unusedName} = "some value";
+  return ${unusedName};
 
   // Option 3: Prefix with underscore if intentionally unused
-  const _unusedVariable = "some value";
+  const _${unusedName} = "some value";
   return "result";
 }
 \`\`\`
 
 `;
+        }
       },
-
-      '@typescript-eslint/no-explicit-any': (issue) => {
-        if (issue.message.includes('parseBlob')) {
-          return `#### 💡 Code Example
+      {
+        ruleId: '@typescript-eslint/no-explicit-any',
+        exampleGenerator: (issue) => {
+          if (issue.message.includes('parseBlob')) {
+            return `#### 💡 Code Example
 
 **❌ Before (causes lint error):**
 \`\`\`typescript
@@ -687,9 +720,9 @@ function parseBlob(raw: unknown): RawVetEntry[] {
 \`\`\`
 
 `;
-        }
-        
-        return `#### 💡 Code Example
+          }
+          
+          return `#### 💡 Code Example
 
 **❌ Before (causes lint error):**
 \`\`\`typescript
@@ -725,11 +758,26 @@ function processData(data: unknown) {
 \`\`\`
 
 `;
+        }
       }
-    };
+      // Add more rule configs here as needed
+    ];
 
-    const generator = examples[ruleId];
-    return generator ? generator(issue) : '';
+    // Find a matching config for the ruleId
+    const config = exampleConfigs.find(cfg => cfg.ruleId === ruleId);
+    if (config) {
+      let identifier: string | undefined = undefined;
+      if (config.identifierPattern) {
+        const match = issue.message.match(config.identifierPattern);
+        if (match && match[1]) {
+          identifier = match[1];
+        }
+      }
+      return config.exampleGenerator(issue, identifier);
+    }
+    
+    // Default: no example available
+    return '';
   }
 
   private getAdditionalRuleContext(ruleId: string): string {
