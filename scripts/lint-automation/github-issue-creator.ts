@@ -108,28 +108,43 @@ class GitHubIssueCreator {
     if (!this.token) return null;
 
     try {
-      // Search for issues with the specific rule ID in the title
-      const searchQuery = `repo:${this.owner}/${this.repo}+is:issue+is:open+"Fix ${ruleId} violations"`;
-      const response = await fetch(
-        `${this.apiBase}/search/issues?q=${encodeURIComponent(searchQuery)}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.token}`,
-            'Accept': 'application/vnd.github.v3+json',
-            'User-Agent': 'ClearView-Lint-Automation'
-          }
-        }
-      );
+      // Search for issues with the specific rule ID using multiple strategies
+      const searchQueries = [
+        `repo:${this.owner}/${this.repo}+is:issue+is:open+"Fix ${ruleId} violations"`,
+        `repo:${this.owner}/${this.repo}+is:issue+is:open+"${ruleId}"+label:lint+label:automated`,
+        `repo:${this.owner}/${this.repo}+is:issue+is:open+in:body+"Rule: ${ruleId}"`
+      ];
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.total_count > 0) {
-          const issue = data.items[0];
-          return {
-            number: issue.number,
-            title: issue.title,
-            body: issue.body
-          };
+      for (const searchQuery of searchQueries) {
+        const response = await fetch(
+          `${this.apiBase}/search/issues?q=${encodeURIComponent(searchQuery)}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${this.token}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'User-Agent': 'ClearView-Lint-Automation'
+            }
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.total_count > 0) {
+            // Find the most recent issue for this rule
+            const ruleIssues = data.items.filter((issue: any) => 
+              issue.title.includes(ruleId) || issue.body.includes(`**Rule:** \`${ruleId}\``)
+            );
+            
+            if (ruleIssues.length > 0) {
+              const issue = ruleIssues[0]; // Most recent
+              console.log(`🔍 Found existing issue for ${ruleId}: #${issue.number} - ${issue.title}`);
+              return {
+                number: issue.number,
+                title: issue.title,
+                body: issue.body
+              };
+            }
+          }
         }
       }
     } catch (error) {
@@ -295,32 +310,72 @@ class GitHubIssueCreator {
     const issueGroups = this.groupIssuesForGitHub(report.issues);
 
     for (const group of issueGroups) {
-      // Extract the rule ID from the title for more specific duplicate checking
-      const ruleIdMatch = group.title.match(/Fix (.+?) violations/);
-      const ruleId = ruleIdMatch ? ruleIdMatch[1] : group.category;
-      
-      const existingIssue = await this.checkExistingRuleIssue(ruleId);
+      try {
+        // With new file-based format, the title is now the filename
+        const fileName = group.title;
+        
+        // Check for existing rule-based issues (for backward compatibility)
+        // Extract rule IDs from the body to check old format issues
+        const ruleIdMatches = group.body.match(/## 🔧 ([^\n]+)/g);
+        let existingOldIssue = null;
+        
+        if (ruleIdMatches) {
+          for (const match of ruleIdMatches) {
+            const ruleId = match.replace('## 🔧 ', '').trim();
+            const existing = await this.checkExistingRuleIssue(ruleId);
+            if (existing) {
+              existingOldIssue = existing;
+              console.log(`🔍 Found existing rule-based issue for ${ruleId}: #${existing.number}`);
+              break;
+            }
+          }
+        }
 
-      if (existingIssue) {
-        console.log(`⏭️ Skipping ${ruleId} - issue already exists (#${existingIssue.number})`);
-        // Optionally update the existing issue with new information
-        await this.updateExistingIssue(existingIssue, group, ruleId);
+        // Also check for filename-based issues (new format)
+        const existingFileIssue = await this.checkExistingFileIssue(fileName);
+        
+        if (existingFileIssue) {
+          console.log(`⏭️ Skipping ${fileName} - file-based issue already exists (#${existingFileIssue.number})`);
+          continue;
+        }
+
+        if (existingOldIssue) {
+          console.log(`⏭️ Found old rule-based issue (#${existingOldIssue.number}) - will migrate to file-based format`);
+          // Close the old issue and let the new one be created
+          await this.closeOldIssueForMigration(existingOldIssue.number, fileName);
+        }
+
+        // Add race condition protection: wait a random delay to prevent simultaneous creation
+        const delay = Math.floor(Math.random() * 3000) + 1000; // 1-4 seconds
+        console.log(`🕐 Waiting ${Math.round(delay/1000)}s to prevent race conditions...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+
+        // Final check for existing issues after delay (race condition protection)
+        const finalFileCheck = await this.checkExistingFileIssue(fileName);
+        if (finalFileCheck) {
+          console.log(`⏭️ Race condition detected: ${fileName} - issue was created by another process (#${finalFileCheck.number})`);
+          continue;
+        }
+
+        const issue = await this.createIssue({
+          title: group.title,
+          body: group.body,
+          labels: group.labels
+        });
+
+        if (issue) {
+          console.log(`✅ Created issue #${issue.number}: ${group.title}`);
+          console.log(`   🔗 ${issue.url}`);
+        }
+
+        // Add delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+      } catch (error) {
+        console.warn(`⚠️ Failed to process group for ${group.title}:`, error);
+        // Continue with next group instead of failing completely
         continue;
       }
-
-      const issue = await this.createIssue({
-        title: group.title,
-        body: group.body,
-        labels: group.labels
-      });
-
-      if (issue) {
-        console.log(`✅ Created issue #${issue.number}: ${group.title}`);
-        console.log(`   🔗 ${issue.url}`);
-      }
-
-      // Add small delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
 
@@ -388,23 +443,25 @@ All instances of \`${ruleId}\` violations have been fixed. This issue is now aut
       labels: string[];
     }> = [];
 
-    // Group by rule ID for better organization
-    const ruleGroups = issues.reduce((acc, issue) => {
-      if (!acc[issue.ruleId]) acc[issue.ruleId] = [];
-      acc[issue.ruleId].push(issue);
+    // Group by file instead of rule (as requested by user)
+    const fileGroups = issues.reduce((acc, issue) => {
+      if (!acc[issue.file]) acc[issue.file] = [];
+      acc[issue.file].push(issue);
       return acc;
     }, {} as Record<string, AnalyzedIssue[]>);
 
-    for (const [ruleId, ruleIssues] of Object.entries(ruleGroups)) {
-      if (ruleIssues.length === 0) continue;
+    for (const [filePath, fileIssues] of Object.entries(fileGroups)) {
+      if (fileIssues.length === 0) continue;
 
-      const category = ruleIssues[0].category;
-      const severity = ruleIssues[0].severity;
+      const fileName = filePath.split('/').pop() || filePath;
+      const category = fileIssues[0].category;
+      const severity = fileIssues.some(issue => issue.severity === 'error') ? 'error' : 'warning';
       
+      // Create title using filename as requested by user
       groups.push({
         category,
-        title: `🔧 Fix ${ruleId} violations (${ruleIssues.length} instances)`,
-        body: this.generateRuleIssueBody(ruleId, ruleIssues),
+        title: fileName,
+        body: this.generateFileIssueBody(fileName, filePath, fileIssues),
         labels: [
           'lint',
           'code-quality',
@@ -549,6 +606,160 @@ All instances of \`${ruleId}\` violations have been fixed. This issue is now aut
     body += `- **Auto-generated:** ${new Date().toISOString()}\n`;
 
     return body;
+  }
+
+  private generateFileIssueBody(fileName: string, filePath: string, issues: AnalyzedIssue[]): string {
+    // Group issues by rule in this file
+    const ruleGroups = issues.reduce((acc, issue) => {
+      if (!acc[issue.ruleId]) acc[issue.ruleId] = [];
+      acc[issue.ruleId].push(issue);
+      return acc;
+    }, {} as Record<string, AnalyzedIssue[]>);
+
+    const ruleCount = Object.keys(ruleGroups).length;
+    const totalIssues = issues.length;
+    
+    let body = `# ${fileName}\n\n`;
+    body += `**${totalIssues} lint issue(s) found in this file across ${ruleCount} rule(s).**\n\n`;
+
+    // File info
+    body += `### 📁 File Details\n\n`;
+    body += `- **File:** \`${filePath}\`\n`;
+    body += `- **Issues:** ${totalIssues}\n`;
+    body += `- **Rules:** ${Object.keys(ruleGroups).join(', ')}\n\n`;
+
+    // List each rule violation with the problem as a header
+    for (const [ruleId, ruleIssues] of Object.entries(ruleGroups)) {
+      const firstIssue = ruleIssues[0];
+      body += `## 🔧 ${ruleId}\n\n`;
+      body += `**${ruleIssues.length} instance(s) of this rule violation.**\n\n`;
+      
+      // Analysis for this rule
+      body += `### 🔍 Analysis\n\n`;
+      body += `**Likely Cause:** ${firstIssue.likelyCause}\n\n`;
+      body += `**Suggested Solution:** ${firstIssue.suggestedSolution}\n\n`;
+      body += `**Prevention:** ${firstIssue.preventionTip}\n\n`;
+
+      // Specific violations in this file
+      body += `### 📍 Violations\n\n`;
+      ruleIssues.forEach(issue => {
+        body += `- **Line ${issue.line}:${issue.column}** - ${issue.message}\n`;
+      });
+      body += `\n`;
+
+      // Add specific code examples for this rule
+      const codeExample = this.generateCodeExample(ruleId, ruleIssues[0]);
+      if (codeExample) {
+        body += codeExample;
+      }
+
+      // Additional context for specific rules
+      body += this.getAdditionalRuleContext(ruleId);
+    }
+
+    // Fix instructions
+    body += `### 🛠️ How to Fix\n\n`;
+    body += `#### Step-by-Step Instructions:\n`;
+    body += `1. **Open the file** \`${filePath}\`\n`;
+    body += `2. **Review each violation** listed above\n`;
+    body += `3. **Apply the suggested solution** for each rule\n`;
+    body += `4. **Test the changes** to ensure functionality is preserved\n`;
+    body += `5. **Run \`npm run lint\`** to verify the fixes\n\n`;
+
+    if (totalIssues > 1) {
+      body += `**Tip:** This file has multiple lint issues. Consider fixing them all at once for consistency.\n\n`;
+    }
+
+    body += `### 🤖 Issue Details\n\n`;
+    body += `- **File:** \`${filePath}\`\n`;
+    body += `- **Total Issues:** ${totalIssues}\n`;
+    body += `- **Rules:** ${Object.keys(ruleGroups).map(rule => `\`${rule}\``).join(', ')}\n`;
+    body += `- **Auto-generated:** ${new Date().toISOString()}\n`;
+
+    return body;
+  }
+
+  async checkExistingFileIssue(fileName: string): Promise<{ number: number; title: string; body: string } | null> {
+    if (!this.token) return null;
+
+    try {
+      // Search for issues with the filename as title
+      const searchQuery = `repo:${this.owner}/${this.repo}+is:issue+is:open+"${fileName}"+label:lint+label:automated`;
+      
+      const response = await fetch(
+        `${this.apiBase}/search/issues?q=${encodeURIComponent(searchQuery)}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'ClearView-Lint-Automation'
+          }
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.total_count > 0) {
+          // Find exact title match
+          const exactMatch = data.items.find((issue: any) => issue.title === fileName);
+          if (exactMatch) {
+            console.log(`🔍 Found existing file-based issue for ${fileName}: #${exactMatch.number}`);
+            return {
+              number: exactMatch.number,
+              title: exactMatch.title,
+              body: exactMatch.body
+            };
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(`⚠️ Could not check existing issues for file ${fileName}:`, error);
+    }
+
+    return null;
+  }
+
+  async closeOldIssueForMigration(issueNumber: number, fileName: string): Promise<void> {
+    if (!this.token) return;
+
+    try {
+      // Add a comment explaining the migration
+      const migrationComment = `🔄 **Issue Format Migration**
+
+This issue is being closed as we're migrating to a new file-based issue format for better organization.
+
+**Old format:** Rule-based grouping
+**New format:** File-based grouping (\`${fileName}\`)
+
+A new issue will be created with the updated format to track the same lint violations.
+
+*Migrated by ClearView Lint Automation on ${new Date().toISOString()}*`;
+
+      await this.addCommentToIssue(issueNumber, migrationComment);
+
+      // Close the issue
+      const response = await fetch(`${this.apiBase}/repos/${this.owner}/${this.repo}/issues/${issueNumber}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'ClearView-Lint-Automation'
+        },
+        body: JSON.stringify({
+          state: 'closed',
+          state_reason: 'completed'
+        })
+      });
+
+      if (response.ok) {
+        console.log(`✅ Closed old format issue #${issueNumber} for migration to file-based format`);
+      } else {
+        console.warn(`⚠️ Failed to close old format issue #${issueNumber}:`, response.statusText);
+      }
+    } catch (error) {
+      console.warn(`⚠️ Could not close old format issue #${issueNumber}:`, error);
+    }
   }
 
   private generateCodeExample(ruleId: string, issue: AnalyzedIssue): string {
