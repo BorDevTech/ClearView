@@ -74,11 +74,21 @@ class LintAnalyzer {
   }
 
   async analyzeLintIssues(): Promise<IssueReport> {
-    console.log('🔍 Running ESLint analysis...');
+    console.log('🔍 Running comprehensive analysis (ESLint + TypeScript)...');
     
+    // Run ESLint and get output
     const lintOutput = this.runLint();
-    const issues = this.parseLintOutput(lintOutput);
-    const analyzedIssues = issues.map(issue => this.analyzeIssue(issue, issues));
+    
+    // Run TypeScript compiler and get output  
+    const tscOutput = this.runTypeScriptCheck();
+    
+    // Parse both types of output into structured issues
+    const lintIssues = this.parseLintOutput(lintOutput);
+    const tscIssues = this.parseTypeScriptOutput(tscOutput);
+    
+    // Combine both types of issues
+    const allIssues = [...lintIssues, ...tscIssues];
+    const analyzedIssues = allIssues.map(issue => this.analyzeIssue(issue, allIssues));
     
     const report: IssueReport = {
       summary: this.generateSummary(analyzedIssues),
@@ -113,6 +123,59 @@ class LintAnalyzer {
         }
       }
     }
+  }
+
+  private runTypeScriptCheck(): string {
+    console.log('🔧 Running TypeScript compilation check...');
+    try {
+      // Try to run TypeScript compiler with noEmit flag to just check for errors
+      const result = execSync('npx tsc --noEmit --pretty false 2>&1', { 
+        cwd: projectRoot, 
+        encoding: 'utf8',
+        stdio: 'pipe'
+      });
+      console.log('✅ TypeScript compilation successful');
+      return '';
+    } catch (error: unknown) {
+      if (typeof error === 'object' && error !== null) {
+        const err = error as { stdout?: string; stderr?: string; message?: string };
+        // When execSync throws, the output is in stdout for this command
+        const output = err.stdout || err.stderr || err.message || '';
+        console.log('🔍 TypeScript found errors:', String(output).length, 'characters');
+        return String(output);
+      }
+      return '';
+    }
+  }
+
+  private parseTypeScriptOutput(output: string): LintIssue[] {
+    const issues: LintIssue[] = [];
+    
+    // Handle case where output might not be a string
+    const outputStr = typeof output === 'string' ? output : String(output || '');
+    
+    if (!outputStr.trim()) return issues;
+
+    const lines = outputStr.split('\n');
+    
+    for (const line of lines) {
+      // Match TypeScript error format: "path/file.ts(line,col): error TS####: message"
+      const match = line.match(/^(.+?)\((\d+),(\d+)\):\s+(error|warning)\s+TS\d+:\s+(.+)$/);
+      if (match) {
+        const [, filePath, lineNum, colNum, severity, message] = match;
+        issues.push({
+          file: filePath.startsWith('./') ? filePath : './' + filePath,
+          line: parseInt(lineNum),
+          column: parseInt(colNum),
+          severity: severity as 'error' | 'warning',
+          message: message.trim(),
+          ruleId: 'typescript-compiler'
+        });
+      }
+    }
+
+    console.log(`🔍 Found ${issues.length} TypeScript compilation issues`);
+    return issues;
   }
 
   private parseLintOutput(output: string): LintIssue[] {
@@ -192,7 +255,8 @@ class LintAnalyzer {
       '@typescript-eslint/no-unused-imports': 'Code Quality',
       'prefer-const': 'Code Quality',
       'no-console': 'Code Quality',
-      '@typescript-eslint/prefer-nullish-coalescing': 'Type Safety'
+      '@typescript-eslint/prefer-nullish-coalescing': 'Type Safety',
+      'typescript-compiler': 'Build Failure'
     };
 
     return ruleCategories[issue.ruleId] || 'General';
@@ -214,6 +278,11 @@ class LintAnalyzer {
         cause: 'Import statements that are not used in the file. Common during refactoring or when removing functionality.',
         solution: 'Remove the unused import statements. Most IDEs can do this automatically.',
         prevention: 'Enable auto-remove unused imports in IDE settings. Use import organization tools. Review imports during code review.'
+      },
+      'typescript-compiler': {
+        cause: 'TypeScript compilation error that prevents successful build. Common causes include missing type annotations, incorrect types, or syntax errors.',
+        solution: this.getTypeScriptSolution(issue),
+        prevention: 'Use strict TypeScript configuration. Enable type checking in IDE. Run type checks locally before committing. Use proper TypeScript development tools.'
       }
     };
 
@@ -222,6 +291,25 @@ class LintAnalyzer {
       solution: 'Follow the specific rule guidance. Check ESLint documentation for detailed fix instructions.',
       prevention: 'Configure IDE to show linting errors in real-time. Run lint checks before committing code.'
     };
+  }
+
+  private getTypeScriptSolution(issue: LintIssue): string {
+    const message = issue.message.toLowerCase();
+    
+    if (message.includes('implicitly has an \'any\' type')) {
+      return 'Add explicit type annotation to the parameter or variable. For example: `(value: SelectValue) => {...}` or define an interface for the expected shape.';
+    }
+    if (message.includes('cannot find module')) {
+      return 'Install the missing dependency or check the import path. Verify the module exists and is properly exported.';
+    }
+    if (message.includes('property') && message.includes('does not exist')) {
+      return 'Check the property name for typos or ensure the object has the expected shape. Consider using optional chaining (?.) or type guards.';
+    }
+    if (message.includes('type') && message.includes('is not assignable to type')) {
+      return 'Ensure the assigned value matches the expected type. Consider type casting, union types, or updating the type definition.';
+    }
+    
+    return 'Fix the TypeScript compilation error according to the specific error message. Consult TypeScript documentation for detailed guidance.';
   }
 
   private findSimilarFiles(filePath: string): string[] {
