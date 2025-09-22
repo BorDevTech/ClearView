@@ -17,14 +17,14 @@ export async function verify({
   const queryParams = new URLSearchParams({
     keyword,
     skip: "0",
-    take: "2000",
+    take: "20000",
     lang: "en-us",
     licenseType: "Veterinarian (Regular)",
     licenseStatus: "Active",
     disciplined: "false",
-  });type ArizonaEntry = {
-  columnValues: { data: string }[];
-};
+  }); type ArizonaEntry = {
+    columnValues: { data: string }[];
+  };
 
 
   const res = await fetch(`/api/verify/arizona/?${queryParams.toString()}`);

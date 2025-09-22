@@ -1,21 +1,26 @@
-import type { NextRequest } from "next/server";
+import BlobConvert from "@/data/controls/blobs/BlobConvert";
+import BlobCreate from "@/data/controls/blobs/blobCreate";
+import BlobFetch from "@/data/controls/blobs/blobFetch";
+import BlobSync from "@/data/controls/blobs/blobSync";
+import BlobUpdate from "@/data/controls/blobs/blobUpdate";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
-  // Forward all query string parameters from the incoming request
+  const key = "arizona";
   const { search } = new URL(request.url);
   const url =
-    "https://azsvmeb.portalus.thentiacloud.net/rest/public/profile/search/?" +
+    "https://raw.githubusercontent.com/BorDevTech/ClearView/refs/heads/main/app/api/verify/arizona/arizonaVets.json" +
     (search || "");
 
   try {
+    const blobData = await BlobFetch(key);
+    // ✅ Convert and write blob immediately after fetch
+    await BlobConvert(key, blobData);
     const response = await fetch(url, {
       method: "GET",
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-        Referer: "https://azsvmeb.portalus.thentiacloud.net/webs/portal/register/",
-        Origin: "https://azsvmeb.portalus.thentiacloud.net",
-        Accept: "*/*",
+        "User-Agent": "Mozilla/5.0",
+        Accept: "application/json",
       },
     });
     const data = await response.text();
@@ -24,11 +29,70 @@ export async function GET(request: NextRequest) {
       status: response.status,
     });
   } catch (error: unknown) {
-    return Response.json(
-      {
-        error: error instanceof Error ? error.message : "Failed to fetch data",
-      },
-      { status: 500 }
-    );
+    console.warn(`⚠️ BlobFetch failed for ${key}, falling back to live parse: ${error}`);
+    // If blob does not exist, fetch and parse, then create/update blob
+    ////
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          Accept: "application/json",
+        },
+      });
+      const data = await response.text();
+      const results = JSON.parse(data);
+      await BlobCreate(key);
+      await BlobUpdate(key, {
+        timestamp: new Date().toISOString(),
+        state: key,
+        results
+      });
+      // Optionally, sync the blob after update
+      const blob = await BlobSync(key, results);
+      return NextResponse.json({ count: results.length, blob, results });
+    }
+
+
+    // catch (error: unknown) {
+    //   // Forward all query string parameters from the incoming request
+    //   const { search } = new URL(request.url);
+    //   const url =
+
+    //     "https://azsvmeb.portalus.thentiacloud.net/rest/public/profile/search/?" +
+    //     (search || "");
+
+    //   try {
+    //     const response = await fetch(url, {
+    //       method: "GET",
+    //       headers: {
+    //         "User-Agent":
+    //           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    //         Referer: "https://azsvmeb.portalus.thentiacloud.net/webs/portal/register/",
+    //         Origin: "https://azsvmeb.portalus.thentiacloud.net",
+    //         Accept: "*/*",
+    //       },
+    //     });
+    //     const data = await response.text();
+    //     return new Response(data, {
+    //       headers: { "Content-Type": "application/json; charset=utf-8" },
+    //       status: response.status,
+    //     });
+    //   } catch (error: unknown) {
+    //     return Response.json(
+    //       {
+    //         error: error instanceof Error ? error.message : "Failed to fetch data",
+    //       },
+    //       { status: 500 }
+    //     );
+    //   }
+    // } 
+    catch (fallbackError) {
+      return NextResponse.json({
+        ok: false,
+        error: fallbackError instanceof Error ? fallbackError.message : `Failed to fetch ${key} data`,
+        status: 500,
+      });
+    };
   }
 }

@@ -52,7 +52,8 @@ export async function GET(request: NextRequest) {
       // Optionally, sync the blob after update
       const blob = await BlobSync(key, results);
       return NextResponse.json({ count: results.length, blob, results });
-    } catch (fallbackError) {
+    } 
+    catch (fallbackError) {
       return NextResponse.json({
         ok: false,
         error: fallbackError instanceof Error ? fallbackError.message : `Failed to fetch ${key} data`,
