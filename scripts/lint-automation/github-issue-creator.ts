@@ -702,8 +702,8 @@ All instances of \`${ruleId}\` violations have been fixed. This issue is now aut
       if (response.ok) {
         const data = await response.json();
         if (data.total_count > 0) {
-          // Find exact title match
-          const exactMatch = data.items.find((issue: any) => issue.title === fileName);
+          // Find exact title match (case-insensitive)
+          const exactMatch = data.items.find((issue: any) => issue.title.toLowerCase() === fileName.toLowerCase());
           if (exactMatch) {
             console.log(`🔍 Found existing file-based issue for ${fileName}: #${exactMatch.number}`);
             return {
