@@ -17,17 +17,17 @@
     "lint:auto": "npm run lint:analyze && npm run lint:create-issues"
   },
   "dependencies": {
-    "@chakra-ui/react": "^3.19.1",
+    "@chakra-ui/react": "^3.27.0",
     "@chakra-ui/theme": "^3.4.6",
     "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@vercel/analytics": "^1.5.0",
     "@vercel/blob": "^1.1.1",
     "axios": "^1.12.2",
     "cheerio": "^1.1.2",
     "csv-parse": "^5.6.0",
     "dotenv": "^17.2.1",
-    "framer-motion": "^12.15.0",
+    "framer-motion": "^12.23.16",
     "lucide-react": "^0.512.0",
     "next": "15.3.2",
     "next-themes": "^0.4.6",
@@ -54,11 +54,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/tesseract.js": "^2.0.0",
-    "eslint": "^9",
+    "eslint": "^9.10.0",
     "eslint-config-next": "15.3.2",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.4",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.6.0"
   }
 }

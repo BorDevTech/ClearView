@@ -1,7 +1,7 @@
 import {
   Select,
   HStack,
-  Icon,
+  Icon, Avatar,
   createListCollection,
   Card,
   Portal,
@@ -168,6 +168,10 @@ interface StateSelectorProps {
   selectedState: string;
 }
 
+const initialSpacer = (initials: string) => {
+  return initials.split("").join(" ");
+};
+
 export default function StateSelector({
   setSelectedState,
   selectedState,
@@ -189,7 +193,6 @@ export default function StateSelector({
         }}
       >
         <Select.HiddenSelect />
-        <Select.Label color={"#41b883"} />
 
         <Select.Control>
           <Select.Trigger>
@@ -205,14 +208,15 @@ export default function StateSelector({
           <Select.Positioner>
             <Select.Content>
               {ListedStates.items.map((state) => (
-                <Select.Item item={state} key={state.label}>
-                  <HStack>
-                    <Icon
-                      color={state.active === true ? "green.500" : "red.500"}
-                      as={Activity}
-                    />
-                    {state.label}
-                  </HStack>
+                <Select.Item item={state} key={state.label} justifyContent={'flex-start'}>
+                  <Icon color={state.active === true ? "green.500" : "red.500"}
+                    as={Activity} />
+                  <Avatar.Root size={'xs'}>
+                    {state.value === "No_Selection" ? null : <Avatar.Fallback name={initialSpacer(state.value)} />}
+
+                  </Avatar.Root>
+                  {state.label}
+
                   <Select.ItemIndicator />
                 </Select.Item>
               ))}
