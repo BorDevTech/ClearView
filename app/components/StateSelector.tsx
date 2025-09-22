@@ -1,9 +1,12 @@
 import {
   Select,
+  HStack,
+  Icon,
   createListCollection,
   Card,
   Portal,
 } from "@chakra-ui/react";
+import { Activity } from "lucide-react";
 
 interface StateDefinition {
   active: boolean | null;
@@ -181,16 +184,16 @@ export default function StateSelector({
         multiple={false}
         collection={ListedStates}
         value={[selectedState]}
-        onValueChange={(value: { items: StateDefinition[] }) => {
+        onValueChange={(value) => {
           setSelectedState(value?.items[0]?.value);
         }}
       >
         <Select.HiddenSelect />
-        <Select.Label />
+        <Select.Label color={"#41b883"} />
 
         <Select.Control>
           <Select.Trigger>
-            <Select.ValueText />
+            <Select.ValueText placeholder="Select a State" color={"white"} />
           </Select.Trigger>
           <Select.IndicatorGroup>
             <Select.Indicator />
@@ -201,11 +204,17 @@ export default function StateSelector({
         <Portal>
           <Select.Positioner>
             <Select.Content>
-              {/* TODO: Fix Chakra UI Select.Item structure */}
-              {ListedStates.items.map((state: StateDefinition) => (
-                <div key={state.value}>
-                  {state.label}
-                </div>
+              {ListedStates.items.map((state) => (
+                <Select.Item item={state} key={state.label}>
+                  <HStack>
+                    <Icon
+                      color={state.active === true ? "green.500" : "red.500"}
+                      as={Activity}
+                    />
+                    {state.label}
+                  </HStack>
+                  <Select.ItemIndicator />
+                </Select.Item>
               ))}
             </Select.Content>
           </Select.Positioner>

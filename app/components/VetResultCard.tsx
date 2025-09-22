@@ -1,4 +1,4 @@
-import { Stack, Card, HStack,   Avatar } from "@chakra-ui/react";
+import { Stack, Card, HStack, Avatar } from "@chakra-ui/react";
 import { UserRound } from "lucide-react";
 
 // interface VetResult {
@@ -13,9 +13,9 @@ import { UserRound } from "lucide-react";
 interface VetResultCardProps {
   item: {
     name: string;
-    status: string;
+    status?: string;
     licenseNumber?: string;
-    expiration: string;
+    expiration?: string;
   };
 }
 
@@ -30,8 +30,8 @@ export function VetResultCard({ item }: VetResultCardProps) {
         item.status === "Active"
           ? "green.50"
           : item.status === "Null and Void"
-          ? "red.50"
-          : "gray.50"
+            ? "red.50"
+            : "gray.50"
       }
       h="175px"
       w="300px"
@@ -40,7 +40,7 @@ export function VetResultCard({ item }: VetResultCardProps) {
     >
       <HStack>
         <Avatar.Root borderRadius={4}>
-          <Avatar.Fallback />
+          <Avatar.Icon as={UserRound} />
         </Avatar.Root>
         <Stack>
           <Card.Title mt="2">{item.name}</Card.Title>

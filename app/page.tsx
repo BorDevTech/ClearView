@@ -68,7 +68,7 @@ export default function Home() {
     }
   };
   const label = ListedStates.items.find(
-    item => item.value === selectedState)?.label || selectedState;
+    (item: { value: string; label: string }) => item.value === selectedState)?.label || selectedState;
 
   // Gradient top bar and wider layout
   return (
@@ -187,7 +187,7 @@ export default function Home() {
                           .map((item, idx) => (
                             <VetResultCard item={item} key={idx} />
                           ))}
-                          </Grid>
+                    </Grid>
                     {/* Pagination Controls */}
                     <HStack justifyContent="center" mt={4}>
                       <Button
