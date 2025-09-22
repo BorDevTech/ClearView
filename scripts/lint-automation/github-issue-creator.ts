@@ -132,7 +132,9 @@ class GitHubIssueCreator {
           if (data.total_count > 0) {
             // Find the most recent issue for this rule
             const ruleIssues = data.items.filter((issue: any) => 
-              issue.title.includes(ruleId) || issue.body.includes(`**Rule:** \`${ruleId}\``)
+              issue.title.includes(ruleId) ||
+              issue.body.includes(`**Rule:** \`${ruleId}\``) ||
+              issue.body.includes(`## 🔧 ${ruleId}`)
             );
             
             if (ruleIssues.length > 0) {
