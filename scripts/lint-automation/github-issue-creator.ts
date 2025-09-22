@@ -348,8 +348,8 @@ class GitHubIssueCreator {
         }
 
         // Add race condition protection: wait a random delay to prevent simultaneous creation
-        const delay = Math.floor(Math.random() * 3000) + 1000; // 1-4 seconds
-        console.log(`🕐 Waiting ${Math.round(delay/1000)}s to prevent race conditions...`);
+        const delay = Math.floor(Math.random() * 1000) + 500; // 0.5-1.5 seconds
+        console.log(`🕐 Waiting ${Math.round(delay/1000 * 10) / 10}s to prevent race conditions...`);
         await new Promise(resolve => setTimeout(resolve, delay));
 
         // Final check for existing issues after delay (race condition protection)
