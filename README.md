@@ -296,7 +296,7 @@ ClearView features an advanced automated lint analysis system that provides:
 #### 🎯 Workflow Integration
 ```bash
 # Manual analysis and reporting
-npm run lint:analyze        # Generate comprehensive lint analysis
+npm run lint:analyze        # Generate comprehensive lint analysis (ESLint + TypeScript)
 npm run lint:create-issues  # Create GitHub issues for tracking
 npm run lint:auto          # Complete automated workflow
 
@@ -304,26 +304,63 @@ npm run lint:auto          # Complete automated workflow
 ./scripts/lint-automation/test-workflow.sh
 ```
 
+**🔄 Automated Deployment Integration:**
+The lint automation is fully integrated with the Next.js deployment pipeline:
+
+1. **Normal Build Success**: Deploy to GitHub Pages as usual
+2. **Build Failure Detected**: 
+   - 🔍 Analyze failure with enhanced lint checker
+   - 📝 Create detailed GitHub issues for each error
+   - 💬 Add commit comment with failure summary
+   - 📊 Upload analysis artifacts
+   - ❌ Halt deployment until issues are resolved
+
+**🤖 Issue Lifecycle Management:**
+- **Creation**: Individual issues created for each lint/TypeScript error
+- **Tracking**: Issues categorized by severity and file location
+- **Resolution**: Automatic closure when errors are fixed in subsequent commits
+- **Prevention**: Analysis helps prevent similar issues in the future
+
 #### 🚀 CI/CD Automation
 The system automatically runs on:
 - **Push to main branch**: Creates GitHub issues for new lint problems
-- **Pull requests**: Adds detailed analysis comments
+- **Pull requests**: Adds detailed analysis comments  
 - **Manual triggers**: On-demand analysis via workflow dispatch
+- **🆕 Build failures**: Automatically analyzes deployment failures and creates issues
 
-**Key Features:**
-- Detects patterns across similar files (e.g., route.ts, logic.ts files)
-- Provides context-aware solutions based on project structure
-- Groups related issues for efficient resolution
-- Maintains issue history and tracks resolution progress
+**Enhanced Features:**
+- **Build Failure Detection**: Integrated with Next.js deployment workflow
+- **TypeScript Compilation Analysis**: Detects build-blocking compilation errors
+- **Automated Issue Creation**: Creates GitHub issues when deployments fail
+- **Root Cause Analysis**: Provides specific solutions for TypeScript and ESLint errors
+- **Pattern Recognition**: Identifies similar issues across comparable files
+- **Resolution Tracking**: Monitors issue resolution and automatically closes fixed issues
+
+**Workflow Integration:**
+```yaml
+# When Next.js build fails, the system:
+1. ✅ Detects build failure automatically
+2. 🔍 Runs comprehensive lint + TypeScript analysis
+3. 📝 Creates individual GitHub issues for each error
+4. 💬 Adds detailed commit comments with failure analysis
+5. 📊 Uploads analysis artifacts for review
+6. 🔄 Tracks resolution and closes issues when fixed
+```
 
 ### 🛠️ Lint Rule Categories
 
 | Category | Examples | Auto-Fix Available |
 |----------|----------|-------------------|
+| **🔴 Build Failure** | `typescript-compiler` errors | ⚠️ Manual Fix Required |
 | **Type Safety** | `@typescript-eslint/no-explicit-any` | ✅ Partial |
 | **Code Quality** | `@typescript-eslint/no-unused-vars` | ✅ Yes |
 | **Best Practices** | `prefer-const`, `no-console` | ✅ Yes |
 | **Consistency** | Import organization, formatting | ✅ Yes |
+
+**🆕 Build Failure Detection:**
+- **TypeScript Compilation Errors**: Missing type annotations, incorrect types, syntax errors
+- **Next.js Build Issues**: Component type mismatches, invalid prop types
+- **Deployment Blockers**: Any error that prevents successful production builds
 
 
 ### 🛠️ Quick Start Development
