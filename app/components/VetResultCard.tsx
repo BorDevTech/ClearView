@@ -41,7 +41,6 @@ export function VetResultCard({ item }: VetResultCardProps) {
       <HStack>
         <Avatar.Root borderRadius={4}>
           <Avatar.Fallback />
-          <Avatar.Image as={UserRound} />
         </Avatar.Root>
         <Stack>
           <Card.Title mt="2">{item.name}</Card.Title>
