@@ -14,17 +14,37 @@ import { ListedStates } from "@/app/components/StateSelector";
 
 const totalStates = ListedStates.items.length;
 
-const onlineStates = ListedStates.items.filter(
-  (state) => state.active === true
-).length;
-const offlineStates = ListedStates.items.filter(
-  (state) => state.active === false
-).length;
-const checkingStates = ListedStates.items.filter(
-  (state) => state.active === null
-).length;
 
+interface StateDefinition {
+  active: boolean | null;
+  value: string;
+  label: string;
+}
+interface StateCounts {
+  online: number;
+  offline: number;
+  checking: number;
+}
+// const onlineStates = ListedStates.items.filter(
+//   (state) => state.active === true
+// ).length;
+// const offlineStates = ListedStates.items.filter(
+//   (state) => state.active === false
+// ).length;
+// const checkingStates = ListedStates.items.filter(
+//   (state) => state.active === null
+// ).length;
 
+const { offline: offlineStates, checking: checkingStates, online: onlineStates } =
+  ListedStates.items.reduce(
+    (counts: StateCounts, { active }: StateDefinition) => {
+      if (active === true) counts.online += 1;
+      else if (active === false) counts.offline += 1;
+      else counts.checking += 1;
+      return counts;
+    },
+    { offline: 0, checking: 0, online: 0 }
+  );
 
 export function ProjectHeader({
   icon,

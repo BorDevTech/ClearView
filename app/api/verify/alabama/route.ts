@@ -1,5 +1,4 @@
-// import { NextResponse, type NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import BlobSync from "@/data/controls/blobs/blobSync";
 import BlobCreate from "@/data/controls/blobs/blobCreate";
 import BlobUpdate from "@/data/controls/blobs/blobUpdate";
@@ -7,14 +6,17 @@ import BlobFetch from "@/data/controls/blobs/blobFetch";
 import BlobConvert from "@/data/controls/blobs/BlobConvert";
 import { verify } from "./logic"
 
-export async function GET() {
-  // export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest) {
   // const { searchParams } = new URL(request.url);
   // const firstName = searchParams.get("firstname") || "";
   // const lastName = searchParams.get("lastname") || "";
   // const licenseNumber = searchParams.get("license") || "";
-
   const key = "alabama";
+  const { search } = new URL(request.url);
+  const backupURL =
+    "https://raw.githubusercontent.com/BorDevTech/ClearView/refs/heads/main/app/api/verify/alabama/VET.json" +
+    (search || "");
+
 
   try {
     const data = await BlobFetch(key);
@@ -34,6 +36,7 @@ export async function GET() {
     // If blob does not exist, fetch and parse, then create/update blob
     try {
       // 🌐 Fetch Alabama portal HTML
+      console.log(backupURL);
       const url = `https://licensesearch.alabama.gov/ASBVME`;
       const response = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
       const html = await response.text();
