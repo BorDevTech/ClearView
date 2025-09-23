@@ -1,9 +1,10 @@
-import { NextResponse, type NextRequest } from "next/server";
-import BlobSync from "@/data/controls/blobs/blobSync";
+import { NextRequest, NextResponse } from "next/server";
+import BlobFetch from "@/data/controls/blobs/blobFetch";
 import BlobCreate from "@/data/controls/blobs/blobCreate";
 import BlobUpdate from "@/data/controls/blobs/blobUpdate";
-import BlobFetch from "@/data/controls/blobs/blobFetch";
+import BlobSync from "@/data/controls/blobs/blobSync";
 import BlobConvert from "@/data/controls/blobs/BlobConvert";
+
 
 export async function GET(request: NextRequest) {
   const key = "alabama";
@@ -51,7 +52,8 @@ export async function GET(request: NextRequest) {
       // Optionally, sync the blob after update
       const blob = await BlobSync(key, results);
       return NextResponse.json({ count: results.length, blob, results });
-    } catch (fallbackError) {
+    }
+    catch (fallbackError) {
       return NextResponse.json({
         ok: false,
         error: fallbackError instanceof Error ? fallbackError.message : `Failed to fetch ${key} data`,
@@ -60,7 +62,6 @@ export async function GET(request: NextRequest) {
     };
   }
 }
-
 
 
 // const { searchParams } = new URL(request.url);

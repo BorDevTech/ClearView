@@ -1,9 +1,5 @@
 import { VetResult } from "@/app/types/vet-result";
 
-
-
-
-
 export async function verify({
   firstName,
   lastName,
@@ -13,15 +9,15 @@ export async function verify({
   lastName: string;
   licenseNumber: string;
 }): Promise<VetResult[]> {
+  const key = "alabama";
   console.log("Alabama Loaded");
 
   type RawVetEntry = {
-    Last_Name: string;
-    First_Name: string;
-    Type: string;
-    LIC_Number: string;
-    ISSUED_DATE: string;
-    EXPIRATION_DATE: string;
+
+    LAST_NAME: string;
+    FIRST_NAME: string;
+    TYPE: string;
+    LIC_NUMBER: string;
   };
 
   // 🔍 Internal helper: parse blob response
@@ -33,19 +29,19 @@ export async function verify({
   function filterEntries(entries: RawVetEntry[]): VetResult[] {
     return entries
       .filter((entry) => {
-        const isVet = entry.Type?.trim() === "DVM";
+        const isVet = entry.TYPE?.toLowerCase().includes("veterinarian");
         if (!isVet) return false;
 
         const matchesLicense = licenseNumber
-          ? entry.LIC_Number?.toLowerCase().includes(licenseNumber.toLowerCase())
+          ? entry.LIC_NUMBER?.toLowerCase().includes(licenseNumber.toLowerCase())
           : true;
 
 
 
         const matchesName = firstName || lastName
           ? (() => {
-            // Use DBA if available, otherwise Owners
-            const name = (entry.First_Name + " " + entry.Last_Name).trim();
+            // Use FIRST_NAME if available, otherwise LAST_NAME
+            const name = (entry.FIRST_NAME || entry.LAST_NAME || "").trim();
             const [dbaFirst, ...dbaRest] = name.split(" ");
             const dbaLast = dbaRest.length > 0 ? dbaRest[dbaRest.length - 1] : "";
 
@@ -66,25 +62,23 @@ export async function verify({
         return matchesLicense && matchesName;
       })
       .map((entry) => ({
-        name: entry.First_Name?.trim() + " " + entry.Last_Name?.trim(),
-        licenseNumber: entry.LIC_Number?.trim(),
-        issued: new Date(entry.ISSUED_DATE).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" }),
-        expiration: new Date(entry.EXPIRATION_DATE).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" })
+        name: `${entry.FIRST_NAME} ${entry.LAST_NAME}`.trim(),
+        licenseNumber: entry.LIC_NUMBER?.trim(),
+        status: "Active",
       }));
   }
 
 
-  const res = await fetch("/api/verify/alabama", {
+  const res = await fetch(`/api/verify/${key}`, {
     method: "GET",
   });
 
-  if (!res.ok) throw new Error("Failed to fetch alabama data");
+  if (!res.ok) throw new Error(`Failed to fetch ${key} data`);
   const rawData = await res.json();
   const parsedData = parseBlob(rawData);
   const results = filterEntries(parsedData);
   return results;
 }
-
 
 // function parse(html: string): VetResult[] {
 //   const parser = new DOMParser();
@@ -173,19 +167,19 @@ export async function verify({
 // console.log(`logging VERIFIED results:`, results);
 // console.log(`logging VERIFIED results amount:`, results[0]);
 // const data = await res.text();
-// // Parse the HTML using DOMParser (Edge Runtime or browser)
-// // const parser = new DOMParser();
-// // const doc = parser.parseFromString(data, "text/html");
-// // const rows = Array.from(doc.querySelectorAll("#myDataTable tbody tr"));
+// Parse the HTML using DOMParser (Edge Runtime or browser)
+// const parser = new DOMParser();
+// const doc = parser.parseFromString(data, "text/html");
+// const rows = Array.from(doc.querySelectorAll("#myDataTable tbody tr"));
 
-// // // Filter for names containing " - DVM"
-// // const filteredRows = rows.filter((row) => {
-// //   const cells = row.querySelectorAll("td");
-// //   const name = cells[0]?.textContent?.trim() || "";
-// //   return name.includes(" - DVM");
-// // });
+// // Filter for names containing " - DVM"
+// const filteredRows = rows.filter((row) => {
+//   const cells = row.querySelectorAll("td");
+//   const name = cells[0]?.textContent?.trim() || "";
+//   return name.includes(" - DVM");
+// });
 
-// // Map each filtered row to a VetResult
+// Map each filtered row to a VetResult
 // const parsed = parse(data);
 // console.log(`🔍 Parsed Alabama vet data: ${parsed}`);
 // return parsed;

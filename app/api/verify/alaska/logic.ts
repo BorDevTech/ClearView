@@ -9,6 +9,8 @@ export async function verify({
   lastName: string;
   licenseNumber: string;
 }): Promise<VetResult[]> {
+
+  const key = "alaska";
   console.log("Alaska Loaded");
 
   type RawVetEntry = {
@@ -29,8 +31,11 @@ export async function verify({
   };
 
   // 🔍 Internal helper: parse blob response
-  function parseBlob(raw: RawVetEntry[] | { blob?: RawVetEntry[] }): RawVetEntry[] {
-    return Array.isArray(raw) ? raw : raw.blob ?? [];
+  function parseBlob(raw: RawVetEntry[] | { blob?: RawVetEntry[]; results: RawVetEntry[] }): RawVetEntry[] {
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw.blob)) return raw.blob;
+    if (Array.isArray(raw.results)) return raw.results;
+    return [];
   }
 
   // 🧠 Internal helper: filter and transform entries
@@ -79,11 +84,11 @@ export async function verify({
   }
 
 
-  const res = await fetch("/api/verify/alaska", {
+  const res = await fetch(`/api/verify/${key}`, {
     method: "GET",
   });
 
-  if (!res.ok) throw new Error("Failed to fetch Alaska data");
+  if (!res.ok) throw new Error(`Failed to fetch ${key} data`);
   const rawData = await res.json();
   const parsedData = parseBlob(rawData);
   const results = filterEntries(parsedData);
