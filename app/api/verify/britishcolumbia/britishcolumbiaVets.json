@@ -37508,5 +37508,60 @@
     "specialty": "",
     "notes": "",
     "licenseNumber": ""
+  },
+  {
+    "id": "d8e2f7b1-6f10-ea11-a811-000d3a0c8cd2",
+    "name": "Cienciala, Susi",
+    "preferredName": "Susi",
+    "class": "Private Practice",
+    "licenseStatus": "License - Full",
+    "licenseType": "Veterinarian",
+    "specialty": "",
+    "notes": "",
+    "licenseNumber": ""
+  },
+  {
+    "id": "0c55f5dc-6f10-ea11-a811-000d3a0c8cd2",
+    "name": "Ashburner, Sue",
+    "preferredName": "",
+    "class": "Private Practice",
+    "licenseStatus": "Resigned",
+    "licenseType": "Veterinarian",
+    "specialty": "",
+    "notes": "",
+    "licenseNumber": ""
+  },
+  {
+    "id": "6a87c535-7210-ea11-a811-000d3a0c8127",
+    "name": "Frayn, Suvi",
+    "preferredName": "Suvi",
+    "class": "Private Practice",
+    "licenseStatus": "License - Full",
+    "licenseType": "Veterinarian",
+    "specialty": "",
+    "notes": "",
+    "licenseNumber": ""
+  },
+  {
+    "id": "6a97e09f-7110-ea11-a811-000d3a0c8127",
+    "name": "Mannhardt, Ute",
+    "preferredName": "",
+    "class": "Private Practice",
+    "licenseStatus": "License - Full",
+    "licenseType": "Veterinarian",
+    "specialty": "",
+    "notes": "",
+    "licenseNumber": ""
+  },
+  {
+    "id": "753985de-95be-ec11-983e-0022483d1cf9",
+    "name": "Luo, Yi Yi",
+    "preferredName": "Lucy",
+    "class": "Private Practice",
+    "licenseStatus": "Resigned",
+    "licenseType": "Veterinarian",
+    "specialty": "",
+    "notes": "",
+    "licenseNumber": ""
   }
 ]
