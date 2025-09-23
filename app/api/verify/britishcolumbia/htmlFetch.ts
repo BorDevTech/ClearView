@@ -27,6 +27,11 @@ const DELAY_MS = 3000;
 const CHUNK_SIZE = 10; // flush every 10 terms
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+type BCFileFormat = {
+    progressPercent: number;
+    results: VetResult[];
+};
+
 async function fetchBC(term: string): Promise<VetResult[]> {
     const url = `https://www.cvbc.ca/registrant-lookup-results/?lastname=&firstname=${encodeURIComponent(term)}&preferredname=&specialty=`;
 
@@ -59,9 +64,23 @@ async function fetchBC(term: string): Promise<VetResult[]> {
         const id = idMatch ? idMatch[1] : "";
 
         if (cells.length >= 7) {
+            // Split "Last, First" into separate fields
+            let lastName = "";
+            let firstName = "";
+            if (cells[0].includes(",")) {
+                const parts = cells[0].split(",").map(p => p.trim());
+                lastName = parts[0] || "";
+                firstName = parts[1] || "";
+            } else {
+                // Fallback if no comma
+                const parts = cells[0].split(" ").map(p => p.trim());
+                firstName = parts[0] || "";
+                lastName = parts.slice(1).join(" ") || "";
+            }
             results.push({
                 id,
-                name: cells[0],
+                firstName,
+                lastName,
                 preferredName: cells[1],
                 class: cells[2],
                 licenseStatus: cells[3],
@@ -77,37 +96,74 @@ async function fetchBC(term: string): Promise<VetResult[]> {
 }
 
 (async () => {
-    const masterList: VetResult[] = [];
-    const totalTerms = letters.length * letters.length;
-    let termIndex = 0;
-
-    // Ensure directory exists
     fs.mkdirSync(path.dirname(OUT_JSON), { recursive: true });
 
-    for (const l1 of letters) {
-        for (const l2 of letters) {
-            termIndex++;
-            const term = `${l1}${l2}`;
-            console.log(`🔍 [${termIndex}/${totalTerms}] Fetching term: ${term}`);
-
-            const batch = await fetchBC(term);
-            console.log(`📄 ${term}: ${batch.length} results`);
-            masterList.push(...batch);
-
-            // Flush every CHUNK_SIZE terms
-            if (termIndex % CHUNK_SIZE === 0) {
-                const unique = Array.from(new Map(masterList.map(v => [v.id, v])).values());
-                fs.writeFileSync(OUT_JSON, JSON.stringify(unique, null, 2), "utf-8");
-                console.log(`💾 Flushed ${unique.length} records to ${OUT_JSON}`);
-            }
-
-            // Delay to avoid IP block
-            await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+    let fileData: BCFileFormat = { progressPercent: 0, results: [] };
+    if (fs.existsSync(OUT_JSON)) {
+        try {
+            fileData = JSON.parse(fs.readFileSync(OUT_JSON, "utf-8"));
+            console.log(`♻️ Resuming from ${fileData.progressPercent.toFixed(3)}%`);
+        } catch {
+            console.warn("⚠️ Existing file unreadable, starting fresh");
         }
     }
 
-    // Final dedupe and write
+    const masterList: VetResult[] = [...fileData.results];
+    const totalTerms = letters.length * letters.length;
+
+    // Build all terms
+    const allTerms: string[] = [];
+    for (const l1 of letters) {
+        for (const l2 of letters) {
+            allTerms.push(`${l1}${l2}`);
+        }
+    }
+
+    // Calculate resume index
+    const startIndex = Math.floor((fileData.progressPercent / 100) * totalTerms);
+    const startTime = Date.now();
+
+    for (let i = startIndex; i < totalTerms; i++) {
+        const term = allTerms[i];
+        console.log(`🔍 [${i + 1}/${totalTerms}] Fetching term: ${term}`);
+
+        const batch = await fetchBC(term);
+        console.log(`📄 ${term}: ${batch.length} results`);
+        masterList.push(...batch);
+
+        // ETA calculation
+        const elapsedMs = Date.now() - startTime;
+        const termsDoneThisRun = i - startIndex + 1;
+        const avgMsPerTerm = elapsedMs / termsDoneThisRun;
+        const remainingCount = totalTerms - (i + 1);
+        const etaMs = avgMsPerTerm * remainingCount;
+        console.log(`⏱ ETA: ~${(etaMs / 60000).toFixed(1)} minutes remaining`);
+
+        // Flush every CHUNK_SIZE terms
+        if ((i + 1) % CHUNK_SIZE === 0) {
+            const unique = Array.from(new Map(masterList.map(v => [v.id, v])).values());
+            const progressPercent = (((i + 1) / totalTerms) * 100);
+            fs.writeFileSync(
+                OUT_JSON,
+                JSON.stringify({ progressPercent: parseFloat(progressPercent.toFixed(3)), results: unique }, null, 2),
+                "utf-8"
+            );
+            console.log(`💾 Flushed ${unique.length} records at ${progressPercent.toFixed(3)}% — safe to commit now`);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+    }
+
     const unique = Array.from(new Map(masterList.map(v => [v.id, v])).values());
-    fs.writeFileSync(OUT_JSON, JSON.stringify(unique, null, 2), "utf-8");
+    fs.writeFileSync(
+        OUT_JSON,
+        JSON.stringify({ progressPercent: 100.0, results: unique }, null, 2),
+        "utf-8"
+    );
     console.log(`✅ Done! Saved ${unique.length} vets to ${OUT_JSON}`);
+    const publicPath = path.resolve(process.cwd(), "data/britishcolumbiaVets.json");
+    fs.mkdirSync(path.dirname(publicPath), { recursive: true });
+    fs.writeFileSync(publicPath, JSON.stringify(unique, null, 2), "utf-8");
+    console.log(`📤 Exported clean results to ${publicPath}`);
+
 })();
