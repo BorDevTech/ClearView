@@ -79,6 +79,7 @@ async function fetchBC(term: string): Promise<VetResult[]> {
             }
             results.push({
                 id,
+                name: `${firstName} ${lastName}`.trim(),
                 firstName,
                 lastName,
                 preferredName: cells[1],

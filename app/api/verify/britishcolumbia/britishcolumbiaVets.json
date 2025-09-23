@@ -37431,5 +37431,82 @@
     "specialty": "",
     "notes": "",
     "licenseNumber": ""
+  },
+  {
+    "id": "a395e6b6-7110-ea11-a811-000d3a0c8127",
+    "name": "Burstyn, Uri",
+    "preferredName": "",
+    "class": "Private Practice",
+    "licenseStatus": "License - Full",
+    "licenseType": "Veterinarian",
+    "specialty": "",
+    "notes": "",
+    "licenseNumber": ""
+  },
+  {
+    "id": "5e4c34f4-8e56-ef11-bfe3-6045bd613586",
+    "name": "Lee, Yu Ri",
+    "preferredName": "Yuri",
+    "class": "Private Practice",
+    "licenseStatus": "License - Full",
+    "licenseType": "Veterinarian",
+    "specialty": "",
+    "notes": "",
+    "licenseNumber": ""
+  },
+  {
+    "id": "10ff0eda-7110-ea11-a811-000d3a0c8cd2",
+    "name": "Yoon, Yuri",
+    "preferredName": "",
+    "class": "Private Practice",
+    "licenseStatus": "License - Full",
+    "licenseType": "Veterinarian",
+    "specialty": "",
+    "notes": "",
+    "licenseNumber": ""
+  },
+  {
+    "id": "cd58f032-7010-ea11-a811-000d3a0c8cd2",
+    "name": "Gerard, Russ",
+    "preferredName": "",
+    "class": "Private Practice",
+    "licenseStatus": "License - Full",
+    "licenseType": "Veterinarian",
+    "specialty": "",
+    "notes": "",
+    "licenseNumber": ""
+  },
+  {
+    "id": "f53301c5-6f10-ea11-a811-000d3a0c8cd2",
+    "name": "Kennedy, Ruth",
+    "preferredName": "",
+    "class": "Private Practice",
+    "licenseStatus": "License - Full",
+    "licenseType": "Veterinarian",
+    "specialty": "",
+    "notes": "",
+    "licenseNumber": ""
+  },
+  {
+    "id": "449411cf-7110-ea11-a811-000d3a0c8127",
+    "name": "Ritchie, Ruth",
+    "preferredName": "",
+    "class": "Private Practice",
+    "licenseStatus": "License - Full",
+    "licenseType": "Veterinarian",
+    "specialty": "",
+    "notes": "",
+    "licenseNumber": ""
+  },
+  {
+    "id": "f3df11eb-7010-ea11-a811-000d3a0c8cd2",
+    "name": "Sawatsky, Ruth",
+    "preferredName": "",
+    "class": "Private Practice",
+    "licenseStatus": "License - Full",
+    "licenseType": "Veterinarian",
+    "specialty": "",
+    "notes": "",
+    "licenseNumber": ""
   }
 ]
