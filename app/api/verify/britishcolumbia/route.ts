@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   const key = "britishcolumbia";
   const { search } = new URL(request.url);
   const url =
-    "https://raw.githubusercontent.com/BorDevTech/ClearView/refs/heads/main/app/api/verify/britishcolumbia/britishcolumbiaVets.json" +
+    "https://raw.githubusercontent.com/BorDevTech/ClearView/refs/heads/main/app/api/verify/britishcolumbia/britishcolumbiaVets-FINAL.json" +
     (search || "");
 
   try {

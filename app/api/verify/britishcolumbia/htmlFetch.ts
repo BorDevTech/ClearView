@@ -162,7 +162,7 @@ async function fetchBC(term: string): Promise<VetResult[]> {
         "utf-8"
     );
     console.log(`✅ Done! Saved ${unique.length} vets to ${OUT_JSON}`);
-    const publicPath = path.resolve(process.cwd(), "data/britishcolumbiaVets.json");
+    const publicPath = path.resolve(process.cwd(), "app/api/verify/britishcolumbia/britishcolumbiaVets-FINAL.json");
     fs.mkdirSync(path.dirname(publicPath), { recursive: true });
     fs.writeFileSync(publicPath, JSON.stringify(unique, null, 2), "utf-8");
     console.log(`📤 Exported clean results to ${publicPath}`);
