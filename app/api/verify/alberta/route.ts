@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const key = "alberta";
   const { search } = new URL(request.url);
   const url =
-    "https://raw.githubusercontent.com/BorDevTech/ClearView/refs/heads/main/app/api/verify/alberta/albertaVets.json" +
+    "https://raw.githubusercontent.com/BorDevTech/ClearView/refs/heads/main/data/albertaVets.json" +
     (search || "");
 
   try {
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       // Optionally, sync the blob after update
       const blob = await BlobSync(key, results);
       return NextResponse.json({ count: results.length, blob, results });
-    } 
+    }
     catch (fallbackError) {
       return NextResponse.json({
         ok: false,

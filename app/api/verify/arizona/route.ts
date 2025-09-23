@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   const key = "arizona";
   const { search } = new URL(request.url);
   const url =
-    "https://raw.githubusercontent.com/BorDevTech/ClearView/refs/heads/main/app/api/verify/arizona/arizonaVets.json" +
+    "https://raw.githubusercontent.com/BorDevTech/ClearView/refs/heads/main/data/arizonaVets.json" +
     (search || "");
 
   try {

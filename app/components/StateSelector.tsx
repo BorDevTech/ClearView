@@ -23,7 +23,7 @@ export const ListedStates = createListCollection<StateDefinition>({
     { active: true, value: "AL", label: "Alabama" },
     { active: true, value: "AK", label: "Alaska" },
     { active: true, value: "AB", label: "Alberta" },
-    { active: false, value: "AZ", label: "Arizona" },
+    { active: true, value: "AZ", label: "Arizona" },
     { active: null, value: "AR", label: "Arkansas" },
     {
       active: false,
@@ -190,8 +190,8 @@ export default function StateSelector({
         onValueChange={(value) => {
           setSelectedState(value?.items[0]?.value);
         }}
-      > 
-      
+      >
+
         <Select.HiddenSelect />
 
         <Select.Control>
