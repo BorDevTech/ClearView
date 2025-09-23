@@ -34,7 +34,7 @@ export default async function BlobSync(region: string, results?: VetResult[],) {
                 results,
             };
             console.log("✅ Blob already exists")
-            console.log("⚠️ Updating existing blob with new results...");
+            console.log(`⚠️ Updating existing blob with ${results.length} new results...`);
 
             const blob = await BlobUpdate(region, payload);
 
