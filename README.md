@@ -25,6 +25,7 @@
 ---
 
 ## 🗂️ Table of Contents
+
 - [🏛️ Platform Overview](#-platform-overview)
 - [🎯 Target Markets & Use Cases](#-target-markets--use-cases)
 - [🚀 Current Capabilities](#-current-capabilities-v010)
@@ -38,7 +39,7 @@
 
 ---
 
-## 🏛️ Platform Overview
+## 🏛️ Platform Overview [<sup>⬆️ (back to top)</sup>](#-table-of-contents)
 
 > <img src="https://img.icons8.com/color/48/000000/dog.png" width="32"/>  **ClearView™** is a modular, extensible platform that aggregates, organizes, and presents veterinary licensee records across regions.  
 Think of it as a digital library—each region is a “chapter,” every licensee an “entry.”
@@ -53,7 +54,7 @@ Think of it as a digital library—each region is a “chapter,” every license
 
 ---
 
-## 🎯 Target Markets & Use Cases
+## 🎯 Target Markets & Use Cases [<sup>⬆️ (back to top)</sup>](#-table-of-contents)
 
 | 🏥 Clinics | 👔 HR/Compliance | 📊 Researchers | 🛡️ Regulators | 🛠️ Developers |
 |---|---|---|---|---|
@@ -64,7 +65,7 @@ Think of it as a digital library—each region is a “chapter,” every license
 
 ---
 
-## 🚀 Current Capabilities (v0.1.0)
+## 🚀 Current Capabilities (v0.1.0) [<sup>⬆️ (back to top)</sup>](#-table-of-contents)
 
 - **Supported Regions:**  
   - 🇺🇸 Alabama, Alaska, Arizona, Arkansas, Colorado, Connecticut, Florida, Missouri, New Mexico  
@@ -79,7 +80,7 @@ Think of it as a digital library—each region is a “chapter,” every license
 
 ---
 
-## 🔄 How It Works (System Flow)
+## 🔄 How It Works (System Flow) [<sup>⬆️ (back to top)</sup>](#-table-of-contents)
 
 ```mermaid
 graph TD
@@ -98,7 +99,7 @@ graph TD
 
 ---
 
-## 💸 Business Model & Pricing
+## 💸 Business Model & Pricing [<sup>⬆️ (back to top)</sup>](#-table-of-contents)
 
 | Plan         | Features (summary)                              | Best for                     |
 |--------------|------------------------------------------------|------------------------------|
@@ -111,7 +112,7 @@ graph TD
 
 ---
 
-## 🗺️ Roadmap & Ambition
+## 🗺️ Roadmap & Ambition [<sup>⬆️ (back to top)</sup>](#-table-of-contents)
 
 - 🌍 **Expansion:** 50+ US states, Canada, global.
 - 🔔 **Real-time data:** Live sync & alerts.
@@ -122,7 +123,7 @@ graph TD
 
 ---
 
-## 📚 Documentation & Support
+## 📚 Documentation & Support [<sup>⬆️ (back to top)</sup>](#-table-of-contents)
 
 - 📖 [Technical Docs](https://docs.clearview.bordevtech.com)
 - 💻 [API Reference](https://api.clearview.bordevtech.com)
@@ -130,7 +131,7 @@ graph TD
 
 ---
 
-## 🏗️ System Architecture & Development
+## 🏗️ System Architecture & Development [<sup>⬆️ (back to top)</sup>](#-table-of-contents)
 
 - **Frontend:** Next.js, React, Tailwind, Chakra UI
 - **Backend:** Node.js, Next.js API, custom parsers
@@ -139,14 +140,14 @@ graph TD
 
 ---
 
-## ⚖️ Legal Notice
+## ⚖️ Legal Notice [<sup>⬆️ (back to top)</sup>](#-table-of-contents)
 
 © 2025 BorDevTech LLC.  
 ClearView™ does not issue, validate, or interpret credentials. Always consult official boards for legal status.
 
 ---
 
-## ❓ FAQ
+## ❓ FAQ [<sup>⬆️ (back to top)</sup>](#-table-of-contents)
 
 <details>
 <summary>Is ClearView™ a credentialing service?</summary>
