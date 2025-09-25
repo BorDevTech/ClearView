@@ -9,7 +9,7 @@
 
 ---
 
-## TL;DR
+## ⚡ TL;DR
 
 ClearView™ aggregates veterinary licensee data from multiple official jurisdictions into a single, searchable platform.  
 - **NOT** a credentialing service—just an organized portal for public records.
@@ -17,14 +17,17 @@ ClearView™ aggregates veterinary licensee data from multiple official jurisdic
 - For lookup, research, HR/compliance, and developer integration.
 - All data comes directly from regional boards, refreshed regularly (not real-time).
 - Free to try: [Live Demo](https://clear-view-two.vercel.app/) • [Evaluation](https://bordevtech.github.io/ClearView/)
+- [Submit feedback or a region/feature request using our feedback form](https://github.com/BorDevTech/ClearView/issues/new?template=feedback-form.md)
 
 ---
 
-## Table of Contents
+## 🗂️ Table of Contents
 
 - [Platform Overview](#platform-overview)
+- [Target Markets & Use Cases](#target-markets--use-cases)
 - [Current Capabilities (v010)](#current-capabilities-v010)
 - [How It Works (System Flow)](#how-it-works-system-flow)
+- [Business Model & Pricing](#business-model--pricing)
 - [Roadmap & Ambition](#roadmap--ambition)
 - [Documentation & Support](#documentation--support)
 - [System Architecture & Development](#system-architecture--development)
@@ -33,7 +36,7 @@ ClearView™ aggregates veterinary licensee data from multiple official jurisdic
 
 ---
 
-## Platform Overview
+## 🏛️ Platform Overview
 
 ClearView™ is a modular, extensible system designed to aggregate, organize, and present veterinary licensee records from multiple official jurisdictions. Think of it as a digital library or universal table of contents for veterinary licensees, where each region is a “chapter” and every licensee is an “entry” within that chapter.
 
@@ -48,7 +51,28 @@ ClearView™ is a modular, extensible system designed to aggregate, organize, an
 
 ---
 
-## Current Capabilities (v0.1.0)
+## 🎯 Target Markets & Use Cases
+
+ClearView™ is designed to serve a wide and diverse set of users and organizations, including:
+
+- **Veterinary Clinics & Hospitals:** Quickly verify credentials for new hires, locums, and staff across multiple jurisdictions.
+- **Corporate Veterinary Groups:** Centralize compliance operations for multi-location, multi-state/province organizations.
+- **HR & Compliance Teams:** Automate license monitoring, onboarding, and annual audits.
+- **Regulatory Bodies & Boards:** Benchmark, audit, and cross-check licensee records for data quality and public transparency.
+- **Researchers & Analysts:** Access normalized, multi-region data for studies in workforce trends, veterinary education, or public health.
+- **Developers & Integrators:** Embed license lookup, validation, or reporting in HRIS, compliance, or analytics platforms.
+- **Insurers & Credentialing Services:** Streamline credential verification and risk assessment workflows.
+
+Typical use cases include:  
+- Onboarding new veterinarians or vet techs  
+- Annual compliance/license audits  
+- Locum/temporary staff verification  
+- Regulatory research and reporting  
+- Building custom dashboards or compliance automations
+
+---
+
+## 🚀 Current Capabilities (v0.1.0)
 
 - **Supported Regions:**  
   - **US States:** Alabama, Alaska, Arizona, Arkansas, Colorado, Connecticut, Florida, Missouri, New Mexico  
@@ -66,7 +90,7 @@ ClearView™ is a modular, extensible system designed to aggregate, organize, an
 
 ---
 
-## How It Works (System Flow)
+## 🔄 How It Works (System Flow)
 
 1. **User/API Input:** Select a region, enter search criteria.
 2. **Dynamic Routing:** System detects jurisdiction and routes to the correct module.
@@ -78,7 +102,30 @@ Try it live: [Production Platform](https://clear-view-two.vercel.app/) | [Evalua
 
 ---
 
-## Roadmap & Ambition
+## 💸 Business Model & Pricing
+
+ClearView™ offers a range of options to suit different organizational needs:
+
+- **Free Tier:**  
+  Basic lookup and research features, multi-region search, and limited API access for individual users, students, and small clinics.
+
+- **Professional/Team:**  
+  Advanced reporting, bulk lookup, higher API limits, and batch exports—ideal for HR teams, compliance departments, and multi-site practices.
+
+- **Enterprise:**  
+  Custom integrations, SLAs, dedicated support, white-labeling, and volume-based licensing for large organizations, corporate groups, or regulatory bodies.
+
+- **Developer Access:**  
+  API-first—pay per usage or subscribe for higher-volume integrations.
+
+> **Contact us for a detailed quote, partnership, or custom package:**  
+> [sales@bordevtech.com](mailto:sales@bordevtech.com)
+
+*Pricing details, feature tiers, and partnerships are evolving—please check [our website](https://clear-view-two.vercel.app/) or reach out for the latest information.*
+
+---
+
+## 🗺️ Roadmap & Ambition
 
 ClearView™ is built to become the industry-leading standard for veterinary licensee lookup and research. Our next-gen architecture enables:
 
@@ -87,11 +134,11 @@ ClearView™ is built to become the industry-leading standard for veterinary lic
 - **Feature Growth:** Bulk upload, webhooks, advanced analytics, and enterprise SSO.
 - **Ecosystem:** Mobile apps, white-labeling, developer marketplace, and internationalization.
 
-*We welcome feedback and partnerships! [Request a feature or region using our feedback form.](https://github.com/BorDevTech/ClearView/issues/new/choose) Help shape the future of veterinary data discovery!*
+*We welcome feedback and partnerships! [Request a feature or region using our feedback form.](https://github.com/BorDevTech/ClearView/issues/new?template=feedback-form.md) Help shape the future of veterinary data discovery!*
 
 ---
 
-## Documentation & Support
+## 📚 Documentation & Support
 
 - **Technical Docs:** [docs.clearview.bordevtech.com](https://docs.clearview.bordevtech.com)
 - **API Reference:** [api.clearview.bordevtech.com](https://api.clearview.bordevtech.com)
@@ -100,7 +147,7 @@ ClearView™ is built to become the industry-leading standard for veterinary lic
 
 ---
 
-## System Architecture & Development
+## 🏗️ System Architecture & Development
 
 - **Frontend:** Next.js, React, TypeScript, Chakra UI, Tailwind CSS, Framer Motion
 - **Backend:** Next.js API Routes, Node.js, custom parsers for TXT, CSV, JSON, PDF, HTML
@@ -110,14 +157,14 @@ ClearView™ is built to become the industry-leading standard for veterinary lic
 
 ---
 
-## Legal Notice
+## ⚖️ Legal Notice
 
 © 2025 BorDevTech LLC. All rights reserved.  
 ClearView™ does not issue, validate, or interpret credentials and is not a credentialing authority. For official and up-to-date status, always consult the relevant regional board.
 
 ---
 
-## FAQ
+## ❓ FAQ
 
 ### Is ClearView™ a credentialing or validation service?
 No. ClearView™ aggregates and presents licensee data from official sources, but does not itself issue, interpret, or validate licenses. For official or legal credentialing, always consult the relevant state or provincial board.
@@ -135,7 +182,7 @@ Data is sourced directly from regional boards and refreshed on a scheduled basis
 Anyone needing quick, organized access to veterinary licensee records across multiple regions: HR professionals, compliance officers, researchers, developers, and veterinary organizations.
 
 ### Can I request my region or a new feature?
-Absolutely! [Use our feedback form](https://github.com/BorDevTech/ClearView/issues/new/choose) to request a new region, feature, or report a bug.
+Absolutely! [Use our feedback form](https://github.com/BorDevTech/ClearView/issues/new?template=feedback-form.md) to request a new region, feature, or report a bug.
 
 ---
 
