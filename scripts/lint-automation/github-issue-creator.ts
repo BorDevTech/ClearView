@@ -459,11 +459,13 @@ All instances of \`${ruleId}\` violations have been fixed. This issue is now aut
       const category = fileIssues[0].category;
       const severity = fileIssues.some(issue => issue.severity === 'error') ? 'error' : 'warning';
       
-      // Create title using filename as requested by user
+      // Create enhanced title with region context for API verify files
+      const enhancedTitle = this.generateEnhancedTitle(filePath, fileName);
+      
       groups.push({
         category,
-        title: fileName,
-        body: this.generateFileIssueBody(fileName, filePath, fileIssues),
+        title: enhancedTitle,
+        body: this.generateFileIssueBody(enhancedTitle, filePath, fileIssues),
         labels: [
           'lint',
           'code-quality',
@@ -475,6 +477,67 @@ All instances of \`${ruleId}\` violations have been fixed. This issue is now aut
     }
 
     return groups;
+  }
+
+  /**
+   * Generates an enhanced title that includes region context for API verify files
+   * @param filePath - Full path to the file
+   * @param fileName - Base filename
+   * @returns Enhanced title with region context if applicable
+   */
+  private generateEnhancedTitle(filePath: string, fileName: string): string {
+    // Check if this is a file in the API verify directory structure
+    const apiVerifyMatch = filePath.match(/app\/api\/verify\/([^\/]+)\/(.+)$/);
+    
+    if (apiVerifyMatch) {
+      const regionFolder = apiVerifyMatch[1];
+      const fileInRegion = apiVerifyMatch[2];
+      
+      // Convert region folder name to proper case for display
+      // e.g., "arizona" -> "Arizona", "districtofcolumbia" -> "District of Columbia"
+      const regionName = this.formatRegionName(regionFolder);
+      
+      return `${regionName} - ${fileInRegion}`;
+    }
+    
+    // For non-API verify files, return the original filename
+    return fileName;
+  }
+
+  /**
+   * Formats region folder names into proper display names
+   * @param regionFolder - Raw folder name (e.g., "arizona", "districtofcolumbia")
+   * @returns Formatted region name (e.g., "Arizona", "District of Columbia")
+   */
+  private formatRegionName(regionFolder: string): string {
+    // Handle special cases
+    const specialCases: Record<string, string> = {
+      'districtofcolumbia': 'District of Columbia',
+      'newhampshire': 'New Hampshire',
+      'newjersey': 'New Jersey',
+      'newmexico': 'New Mexico',
+      'newyork': 'New York',
+      'northcarolina': 'North Carolina',
+      'northdakota': 'North Dakota',
+      'rhodeisland': 'Rhode Island',
+      'southcarolina': 'South Carolina',
+      'southdakota': 'South Dakota',
+      'westvirginia': 'West Virginia',
+      'britishcolumbia': 'British Columbia',
+      'newbrunswick': 'New Brunswick',
+      'newfoundland&labrador': 'Newfoundland & Labrador',
+      'novascotia': 'Nova Scotia',
+      'princeedwardisland': 'Prince Edward Island',
+      'puertorico': 'Puerto Rico'
+    };
+
+    // Check for special cases first
+    if (specialCases[regionFolder.toLowerCase()]) {
+      return specialCases[regionFolder.toLowerCase()];
+    }
+
+    // For regular cases, just capitalize the first letter
+    return regionFolder.charAt(0).toUpperCase() + regionFolder.slice(1);
   }
 
   private generateSummaryIssueBody(report: IssueReport): string {
@@ -681,14 +744,18 @@ All instances of \`${ruleId}\` violations have been fixed. This issue is now aut
     return body;
   }
 
-  async checkExistingFileIssue(fileName: string): Promise<{ number: number; title: string; body: string } | null> {
+  async checkExistingFileIssue(enhancedTitle: string): Promise<{ number: number; title: string; body: string } | null> {
     if (!this.token) return null;
 
     try {
-      // Search for issues with the filename as title
-      const searchQuery = `repo:${this.owner}/${this.repo}+is:issue+is:open+"${fileName}"+label:lint+label:automated`;
+      // Search for issues with the enhanced title or just the filename
+      // This handles both old format (just filename) and new format (Region - filename)
+      const fileNamePart = enhancedTitle.includes(' - ') ? enhancedTitle.split(' - ')[1] : enhancedTitle;
       
-      const response = await fetch(
+      // First try exact match with enhanced title
+      let searchQuery = `repo:${this.owner}/${this.repo}+is:issue+is:open+"${enhancedTitle}"+label:lint+label:automated`;
+      
+      let response = await fetch(
         `${this.apiBase}/search/issues?q=${encodeURIComponent(searchQuery)}`,
         {
           headers: {
@@ -703,9 +770,9 @@ All instances of \`${ruleId}\` violations have been fixed. This issue is now aut
         const data = await response.json();
         if (data.total_count > 0) {
           // Find exact title match (case-insensitive)
-          const exactMatch = data.items.find((issue: any) => issue.title.toLowerCase() === fileName.toLowerCase());
+          const exactMatch = data.items.find((issue: any) => issue.title.toLowerCase() === enhancedTitle.toLowerCase());
           if (exactMatch) {
-            console.log(`🔍 Found existing file-based issue for ${fileName}: #${exactMatch.number}`);
+            console.log(`🔍 Found existing file-based issue for ${enhancedTitle}: #${exactMatch.number}`);
             return {
               number: exactMatch.number,
               title: exactMatch.title,
@@ -714,14 +781,46 @@ All instances of \`${ruleId}\` violations have been fixed. This issue is now aut
           }
         }
       }
+
+      // If no exact match found, try searching for just the filename part (for backward compatibility)
+      if (fileNamePart !== enhancedTitle) {
+        searchQuery = `repo:${this.owner}/${this.repo}+is:issue+is:open+"${fileNamePart}"+label:lint+label:automated`;
+        
+        response = await fetch(
+          `${this.apiBase}/search/issues?q=${encodeURIComponent(searchQuery)}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${this.token}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'User-Agent': 'ClearView-Lint-Automation'
+            }
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.total_count > 0) {
+            // Find exact match with just the filename (for migration from old format)
+            const exactMatch = data.items.find((issue: any) => issue.title.toLowerCase() === fileNamePart.toLowerCase());
+            if (exactMatch) {
+              console.log(`🔍 Found existing file-based issue (old format) for ${fileNamePart}: #${exactMatch.number}`);
+              return {
+                number: exactMatch.number,
+                title: exactMatch.title,
+                body: exactMatch.body
+              };
+            }
+          }
+        }
+      }
     } catch (error) {
-      console.warn(`⚠️ Could not check existing issues for file ${fileName}:`, error);
+      console.warn(`⚠️ Could not check existing issues for file ${enhancedTitle}:`, error);
     }
 
     return null;
   }
 
-  async closeOldIssueForMigration(issueNumber: number, fileName: string): Promise<void> {
+  async closeOldIssueForMigration(issueNumber: number, enhancedTitle: string): Promise<void> {
     if (!this.token) return;
 
     try {
@@ -731,7 +830,7 @@ All instances of \`${ruleId}\` violations have been fixed. This issue is now aut
 This issue is being closed as we're migrating to a new file-based issue format for better organization.
 
 **Old format:** Rule-based grouping
-**New format:** File-based grouping (\`${fileName}\`)
+**New format:** File-based grouping with region context (\`${enhancedTitle}\`)
 
 A new issue will be created with the updated format to track the same lint violations.
 
@@ -755,7 +854,7 @@ A new issue will be created with the updated format to track the same lint viola
       });
 
       if (response.ok) {
-        console.log(`✅ Closed old format issue #${issueNumber} for migration to file-based format`);
+        console.log(`✅ Closed old format issue #${issueNumber} for migration to ${enhancedTitle}`);
       } else {
         console.warn(`⚠️ Failed to close old format issue #${issueNumber}:`, response.statusText);
       }
