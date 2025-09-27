@@ -1,10 +1,19 @@
 name: 🔧 Automated Lint Issue Detection
 
 on:
+  # Run on push to main/develop branches
   push:
     branches: [ main, develop ]
+  # Run on pull requests to main
   pull_request:
     branches: [ main ]
+  # Run after Next.js workflow completion on main branch
+  workflow_run:
+    workflows: ["Deploy Next.js site to Pages"]
+    types:
+      - completed
+    branches: [ main ]
+  # Manual trigger for testing
   workflow_dispatch:
     inputs:
       create_issues:
