@@ -76,6 +76,7 @@ export async function verify({
       })
       .map((entry) => ({
         name: entry.DBA || entry.Owners || "Unknown",
+        state: "AK - Alaska",
         licenseNumber: entry.LicenseNum?.trim(),
         status: entry.Status?.trim(),
         issued: new Date(entry.DateIssued).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" }),

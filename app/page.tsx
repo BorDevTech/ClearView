@@ -79,7 +79,7 @@ export default function Home() {
         slogan={"One Portal. Every Vet. Instant Results."}
       />
       {/* Main Content */}
-      <Stack direction={["column", "row"] as ["column", "row"]} gap={8} align="flex-start">
+      <Stack direction={["column", "row"] as ["column", "row"]} gap={2} align="flex-start">
         {/* Search Card */}
 
         <Stack><Card.Root width="350px" minW="320px">
@@ -134,7 +134,7 @@ export default function Home() {
         {/* Results Card */}
         <Stack flex={1}>
           <Card.Root width="100%">
-            <Card.Body gap={0}>
+            <Card.Body gap={0} p={3}>
               <Stack justifyContent={"center"} alignItems={"center"}>
                 {!selectedState || selectedState === "No_Selection" ? (
                   <>

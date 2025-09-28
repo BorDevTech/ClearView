@@ -4,9 +4,15 @@ import BlobCreate from "@/data/controls/blobs/blobCreate";
 import BlobUpdate from "@/data/controls/blobs/blobUpdate";
 import BlobSync from "@/data/controls/blobs/blobSync";
 import BlobConvert from "@/data/controls/blobs/BlobConvert";
-
+/**
+   * ORIGINAL FETCH BY CSV
+   *  @link https://www.commerce.alaska.gov/cbp/main/
+   *  or direct download link:
+   *  @link https://www.commerce.alaska.gov/cbp/main/DbDownload/ProfessionalLicenseDownload
+   */
 
 export async function GET(request: NextRequest) {
+
   const key = "alaska";
   const { search } = new URL(request.url);
   const url =
