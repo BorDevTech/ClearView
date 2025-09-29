@@ -74,19 +74,6 @@ export default function Home() {
 
 
 
-  const [debugInfo, setDebugInfo] = useState<{ ok: boolean; preview: string | null } | null>(null);
-
-  const handleTest = async () => {
-    try {
-      const res = await fetch("/api/test");
-      const data = await res.json();
-      setDebugInfo(data);
-    } catch (err) {
-      console.error("Failed to fetch debug info", err);
-    }
-  };
-
-
 
   return (
     <Stack minH="100vh">
@@ -98,7 +85,6 @@ export default function Home() {
       {/* Main Content */}
       <Stack direction={["column", "row"] as ["column", "row"]} gap={2} align="flex-start">
         {/* Search Card */}
-
         <Stack>
           <Card.Root
             // width="350px"
@@ -164,7 +150,6 @@ export default function Home() {
                       veterinary licensing board.
                     </Card.Description>
                   </>
-
                 ) : (
                   <>
                     <Card.Title>Selected Region: {label}</Card.Title>
@@ -174,11 +159,7 @@ export default function Home() {
                     </Card.Description>
                   </>
                 )}
-
-
-
               </Stack>
-
               <Box>
                 {error && <Box color="red.500">{error}</Box>}
                 {Array.isArray(result) && result.length > 0 && (
@@ -240,17 +221,9 @@ export default function Home() {
                         Next
                       </Button>
                     </HStack>
-
                   </>
                 )} </Box>
-              <Box>
-                {debugInfo && (
-                  <Text color={debugInfo.ok ? "green.500" : "red.500"}>
-                    Server sees token: {debugInfo.preview || "MISSING"}
-                  </Text>
-                )}
-                <Button onClick={handleTest}>Test Log</Button>
-              </Box></Card.Body>
+            </Card.Body>
           </Card.Root>
         </Stack>
       </Stack>
