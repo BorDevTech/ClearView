@@ -29,7 +29,7 @@ export default async function BlobSync(region: string, results?: VetResult[],) {
         if (exists && results && results.length > 0) {
             const payload = {
                 timestamp: new Date().toISOString(),
-                state: region,
+                region,
                 count: results.length,
                 results,
             };
