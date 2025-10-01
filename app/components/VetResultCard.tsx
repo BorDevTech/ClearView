@@ -1,4 +1,4 @@
-import { Stack, Card, HStack, Avatar, Text, VStack, Badge } from "@chakra-ui/react";
+import { Card, HStack, Avatar, Text, VStack, Badge } from "@chakra-ui/react";
 import { UserRound } from "lucide-react";
 
 // interface VetResult {
@@ -23,7 +23,7 @@ interface VetResultCardProps {
 export function VetResultCard({ item }: VetResultCardProps) {
   return (
     <>
-      
+
       <Card.Root
         w="360px"
         h="180px"
@@ -38,7 +38,7 @@ export function VetResultCard({ item }: VetResultCardProps) {
             <Text fontSize="sm" fontWeight="bold" color="blue.900" textTransform="uppercase" _selection={{ bg: "green.400", color: "white" }}>
               State of Alaska
             </Text>
-            <Text fontSize="xs" color="blue.700" textTransform="uppercase"_selection={{ bg: "green.400", color: "white" }}>
+            <Text fontSize="xs" color="blue.700" textTransform="uppercase" _selection={{ bg: "green.400", color: "white" }}>
               Board of Veterinary Examiners
             </Text>
           </VStack>
@@ -56,16 +56,16 @@ export function VetResultCard({ item }: VetResultCardProps) {
 
           {/* License info */}
           <VStack align="start" gap={1} flex="1">
-            <Text fontSize="md" fontWeight="semibold" textWrap={'pretty'} color="blue.700"_selection={{ bg: "green.400", color: "white" }}>
+            <Text fontSize="md" fontWeight="semibold" textWrap={'pretty'} color="blue.700" _selection={{ bg: "green.400", color: "white" }}>
               {item.name.toUpperCase()}
             </Text>
-            {item.licenseNumber && <Text fontSize="sm" color="gray.700"_selection={{ bg: "green.400", color: "white" }}>License #: {item.licenseNumber}</Text>}
-            {item.expiration && <Text fontSize="sm" color="gray.700"_selection={{ bg: "green.400", color: "white" }}>Expires: {item.expiration}</Text>}
+            {item.licenseNumber && <Text fontSize="sm" color="gray.700" _selection={{ bg: "green.400", color: "white" }}>License #: {item.licenseNumber}</Text>}
+            {item.expiration && <Text fontSize="sm" color="gray.700" _selection={{ bg: "green.400", color: "white" }}>Expires: {item.expiration}</Text>}
           </VStack>
         </Card.Body>
 
-    {/* Remove Card.Footer with Primary Source */}
-    {/* <Card.Footer justifyContent="flex-end" bg="blue.50" py={1} px={3}>
+        {/* Remove Card.Footer with Primary Source */}
+        {/* <Card.Footer justifyContent="flex-end" bg="blue.50" py={1} px={3}>
       <Text fontSize="xs" color="gray.600">
         Primary Source: Alaska CBPL
       </Text>

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import BlobFetch from "@/data/controls/blobs/blobFetch";
-import BlobCreate from "@/data/controls/blobs/blobCreate";
+import BlobCheck from "@/data/controls/blobs/blobCheck";
+// import BlobCreate from "@/data/controls/blobs/blobCreate";
 import BlobUpdate from "@/data/controls/blobs/blobUpdate";
-import BlobSync from "@/data/controls/blobs/blobSync";
+// import BlobSync from "@/data/controls/blobs/blobSync";
 import BlobConvert from "@/data/controls/blobs/BlobConvert";
 import { readFile } from "fs/promises";
 import path from "path";
@@ -17,25 +18,94 @@ export const runtime = "nodejs";
    */
 
 export async function GET(request: NextRequest) {
+
+  const { search } = new URL(request.url);
+  console.log("Search params:", search);
+  console.log("Starting Alaska verification process...");
   const key = "alaska";
 
-  try {
-    const filePath = path.resolve(`./data/${key}Vets.json`);
-    const local = await readFile(filePath, "utf-8");
-    const data = JSON.parse(local);
-    return NextResponse.json({
-      timestamp: data?.timestamp,
-      state: key,
-      count: data?.count,
-      blob: data?.results,
-    });
-  } catch (error) {
-    return NextResponse.json({
-      ok: false,
-      error: `Failed to read local ${key} data` + (error as Error).message,
-      status: 500,
-    });
+  const source = await fetch(`https://raw.githubusercontent.com/BorDevTech/ClearView/refs/heads/main/data/${key}Vets.json`);
+  const latestData = await source.json();
+  const latestTimestamp = new Date(latestData?.timestamp).getTime();
+  console.log("Latest timestamp from GitHub:", latestTimestamp);
+  // Fetch existing blob data
+  const filePath = path.resolve(`./data/${key}Vets.json`);
+  const local = await readFile(filePath, "utf-8");
+  const localData = JSON.parse(local);
+  console.log("Local timestamp from file:", new Date(localData?.timestamp).getTime());
+
+  if (latestTimestamp > new Date(localData?.timestamp).getTime()) {
+    console.log("GitHub data is newer than local data. Attempting to update...");
+    try {
+      // If GitHub is newer, check if source is reachable
+      const pingRegion = await BlobCheck(key);
+      console.log(`Ping to ${key} source:`, pingRegion ? "reachable" : "unreachable");
+      let currentData = latestData;
+      // If reachable, fetch and update local
+      if (pingRegion) {
+        console.log("Source reachable, fetching latest blob data...");
+        await BlobUpdate(key, currentData);
+        const pulsedData = await BlobFetch(key);
+        console.log("Fetched latest blob data, updating local file...");
+        await BlobConvert(key, pulsedData);
+        console.log("Local file updated with latest blob data.");
+        currentData = pulsedData;
+        console.log("Current data set to latest blob data.");
+
+      } else {
+        console.log("Source unreachable, using GitHub data to update local file...");
+        await BlobConvert(key, latestData);
+        console.log("Local file updated with GitHub data.");
+      }
+
+      return NextResponse.json({
+        timestamp: currentData?.timestamp,
+        state: key,
+        count: currentData?.count,
+        results: currentData?.results,
+      });
+    }
+    catch (error: unknown) {
+      console.log("Error during update process:", error);
+      // else: GitHub not newer, serve local
+      return NextResponse.json({
+        timestamp: localData?.timestamp,
+        state: key,
+        count: localData?.count ?? localData?.results?.length,
+        results: localData?.results ?? localData,
+      });
+    }
   }
+  return NextResponse.json({
+    timestamp: localData?.timestamp,
+    state: key,
+    count: localData?.count ?? localData?.results?.length,
+    results: localData?.results ?? localData,
+  });
+
+
+
+
+  /// Most recent: Compare GitHub vs Local, update if GitHub is newer
+  // try {
+  //   const filePath = path.resolve(`./data/${key}Vets.json`);
+  //   const local = await readFile(filePath, "utf-8");
+  //   const data = JSON.parse(local);
+  //   return NextResponse.json({
+  //     timestamp: data?.timestamp,
+  //     state: key,
+  //     count: data?.count,
+  //     blob: data?.results,
+  //   });
+  // } catch (error) {
+  //   return NextResponse.json({
+  //     ok: false,
+  //     error: `Failed to read local ${key} data` + (error as Error).message,
+  //     status: 500,
+  //   });
+  // }
+
+  ///Day 1: Original fetch by CSV
 
   // const { search } = new URL(request.url);
   // const url =

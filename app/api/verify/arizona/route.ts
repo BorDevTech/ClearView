@@ -1,7 +1,7 @@
 import BlobConvert from "@/data/controls/blobs/BlobConvert";
-import BlobCreate from "@/data/controls/blobs/blobCreate";
+// import BlobCreate from "@/data/controls/blobs/blobCreate";
 import BlobFetch from "@/data/controls/blobs/blobFetch";
-import BlobSync from "@/data/controls/blobs/blobSync";
+// import BlobSync from "@/data/controls/blobs/blobSync";
 import BlobUpdate from "@/data/controls/blobs/blobUpdate";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -12,6 +12,9 @@ import BlobCheck from "@/data/controls/blobs/blobCheck";
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
+
+  const { search } = new URL(request.url);
+  console.log("Search params:", search);
   const key = "arizona";
   const source = await fetch(`https://raw.githubusercontent.com/BorDevTech/ClearView/refs/heads/main/data/${key}Vets.json`);
   const latestData = await source.json();
@@ -33,6 +36,7 @@ export async function GET(request: NextRequest) {
       // If reachable, fetch and update local
       if (pingRegion) {
         console.log("Source reachable, fetching latest blob data...");
+        await BlobUpdate(key, currentData);
         const pulsedData = await BlobFetch(key);
         console.log("Fetched latest blob data, updating local file...");
         await BlobConvert(key, pulsedData);
@@ -53,7 +57,8 @@ export async function GET(request: NextRequest) {
         results: currentData?.results,
       });
     }
-    catch (error) {
+    catch (error: unknown) {
+      console.log("Error during update process:", error);
       // else: GitHub not newer, serve local
       return NextResponse.json({
         timestamp: localData?.timestamp,
