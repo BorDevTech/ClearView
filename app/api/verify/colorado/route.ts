@@ -46,7 +46,8 @@ export async function GET(request: NextRequest) {
       await BlobCreate(key);
       await BlobUpdate(key, {
         timestamp: new Date().toISOString(),
-        state: key,
+        region: key,
+        count: results.length,
         results
       });
       // Optionally, sync the blob after update
