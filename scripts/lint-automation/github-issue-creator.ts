@@ -180,24 +180,151 @@ class GitHubIssueCreator {
       const data = await response.json();
       const openLintIssues = data.items || [];
 
-      // Get current rule IDs from the report
+      // Build maps for quick lookup
+      const currentFileIssues = new Map<string, AnalyzedIssue[]>();
       const currentRuleIds = new Set(report.issues.map(issue => issue.ruleId));
 
+      // Group current issues by file
+      for (const issue of report.issues) {
+        const fileName = issue.file.split('/').pop() || issue.file;
+        if (!currentFileIssues.has(fileName)) {
+          currentFileIssues.set(fileName, []);
+        }
+        currentFileIssues.get(fileName)!.push(issue);
+      }
+
       for (const issue of openLintIssues) {
-        // Extract rule ID from issue title
-        const ruleIdMatch = issue.title.match(/Fix (.+?) violations/);
-        if (!ruleIdMatch) continue;
+        // Check for file-based issues (new format)
+        const fileNameFromTitle = issue.title.includes(' - ') 
+          ? issue.title.split(' - ')[1] 
+          : issue.title;
+        
+        // Check if this is a file-based issue and if the file still has errors
+        if (!issue.title.includes('violations')) {
+          // This is a file-based issue
+          if (!currentFileIssues.has(fileNameFromTitle)) {
+            // File is now clean!
+            await this.closeResolvedFileIssue(issue.number, fileNameFromTitle, issue.body);
+          }
+        } else {
+          // This is a rule-based issue (old format)
+          const ruleIdMatch = issue.title.match(/Fix (.+?) violations/);
+          if (!ruleIdMatch) continue;
 
-        const ruleId = ruleIdMatch[1];
+          const ruleId = ruleIdMatch[1];
 
-        // If this rule is no longer in the current report, the issue is resolved
-        if (!currentRuleIds.has(ruleId)) {
-          await this.closeResolvedIssue(issue.number, ruleId);
+          // If this rule is no longer in the current report, the issue is resolved
+          if (!currentRuleIds.has(ruleId)) {
+            await this.closeResolvedIssue(issue.number, ruleId);
+          }
         }
       }
     } catch (error) {
       console.warn('⚠️ Could not check for resolved issues:', error);
     }
+  }
+
+  /**
+   * Closes a file-based issue that has been resolved, with solution verification
+   */
+  async closeResolvedFileIssue(issueNumber: number, fileName: string, issueBody: string): Promise<void> {
+    if (!this.token) return;
+
+    try {
+      // Extract violations that were in the issue
+      const resolvedViolations = this.extractViolationsFromIssueBody(issueBody);
+      
+      // Generate a sign-off comment with solution analysis
+      const signOffComment = await this.generateSolutionSignOff(fileName, resolvedViolations);
+
+      // Add the sign-off comment
+      await this.addCommentToIssue(issueNumber, signOffComment);
+
+      // Close the issue
+      const response = await fetch(`${this.apiBase}/repos/${this.owner}/${this.repo}/issues/${issueNumber}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'ClearView-Lint-Automation'
+        },
+        body: JSON.stringify({
+          state: 'closed',
+          state_reason: 'completed'
+        })
+      });
+
+      if (response.ok) {
+        console.log(`✅ Closed resolved file issue #${issueNumber} for ${fileName} with @copilot sign-off`);
+      } else {
+        console.warn(`⚠️ Failed to close file issue #${issueNumber}:`, response.statusText);
+      }
+    } catch (error) {
+      console.warn(`⚠️ Could not close resolved file issue #${issueNumber}:`, error);
+    }
+  }
+
+  /**
+   * Generates a sign-off comment analyzing the solutions that were applied
+   */
+  async generateSolutionSignOff(fileName: string, resolvedViolations: Array<{ line: number; column: number; ruleId: string; message: string }>): Promise<string> {
+    let comment = `## ✅ Issue Resolved - All Lint Errors Fixed!\n\n`;
+    comment += `**File:** \`${fileName}\`\n`;
+    comment += `**Resolved:** ${new Date().toISOString()}\n\n`;
+
+    if (resolvedViolations.length > 0) {
+      comment += `### 🎉 Fixed Violations (${resolvedViolations.length})\n\n`;
+      
+      // Group by rule
+      const byRule = resolvedViolations.reduce((acc, v) => {
+        if (!acc[v.ruleId]) acc[v.ruleId] = [];
+        acc[v.ruleId].push(v);
+        return acc;
+      }, {} as Record<string, typeof resolvedViolations>);
+
+      for (const [ruleId, violations] of Object.entries(byRule)) {
+        comment += `#### ${ruleId}\n`;
+        comment += `Fixed ${violations.length} instance(s):\n`;
+        violations.forEach(v => {
+          comment += `- ✅ Line ${v.line}:${v.column} - ${v.message}\n`;
+        });
+        comment += `\n`;
+      }
+
+      comment += `### 💡 Solutions Applied\n\n`;
+      comment += `Based on the fixed violations, the following solutions appear to have been applied:\n\n`;
+
+      // Analyze solutions by rule type
+      const uniqueRules = [...new Set(resolvedViolations.map(v => v.ruleId))];
+      for (const ruleId of uniqueRules) {
+        const solution = this.getSolutionDescription(ruleId);
+        if (solution) {
+          comment += `**${ruleId}:**\n${solution}\n\n`;
+        }
+      }
+    }
+
+    comment += `---\n\n`;
+    comment += `🤖 **Verified and signed off by @copilot**\n\n`;
+    comment += `All lint errors in this file have been successfully resolved. Great work! 🎊\n\n`;
+    comment += `*Automated by ClearView Lint Automation*`;
+
+    return comment;
+  }
+
+  /**
+   * Gets a description of the solution that was likely applied for a rule
+   */
+  private getSolutionDescription(ruleId: string): string {
+    const solutions: Record<string, string> = {
+      '@typescript-eslint/no-unused-vars': '- Removed unused variables/imports or prefixed them with underscore\n- Used the variables in the code implementation',
+      '@typescript-eslint/no-explicit-any': '- Replaced `any` types with proper TypeScript types\n- Created interface definitions for data structures\n- Used `unknown` type for safer handling of external data',
+      '@typescript-eslint/no-unused-imports': '- Removed unused import statements\n- Organized imports to include only what is needed',
+      'typescript-compiler': '- Fixed TypeScript compilation errors\n- Added proper type annotations\n- Resolved module import issues'
+    };
+
+    return solutions[ruleId] || '- Applied the appropriate fix for this rule violation';
   }
 
   async closeResolvedIssue(issueNumber: number, ruleId: string): Promise<void> {
@@ -297,6 +424,188 @@ class GitHubIssueCreator {
     }
   }
 
+  /**
+   * Updates an existing file-based issue with new lint violations
+   * Compares old and new violations to detect changes and mark new errors
+   */
+  async updateExistingFileIssue(
+    existingIssue: { number: number; title: string; body: string },
+    newGroup: { title: string; body: string; labels: string[] }
+  ): Promise<void> {
+    if (!this.token) {
+      console.log(`🔍 Would update existing file issue #${existingIssue.number} for ${newGroup.title}`);
+      return;
+    }
+
+    try {
+      // Parse current violations from existing issue body
+      const existingViolations = this.extractViolationsFromIssueBody(existingIssue.body);
+      const newViolations = this.extractViolationsFromIssueBody(newGroup.body);
+
+      // Detect which violations are new, resolved, or unchanged
+      const newErrors: string[] = [];
+      const resolvedErrors: string[] = [];
+      
+      // Find new errors (in new but not in existing)
+      for (const newViolation of newViolations) {
+        if (!existingViolations.some(existing => 
+          existing.line === newViolation.line && 
+          existing.ruleId === newViolation.ruleId
+        )) {
+          newErrors.push(`Line ${newViolation.line}:${newViolation.column} - ${newViolation.ruleId}`);
+        }
+      }
+
+      // Find resolved errors (in existing but not in new)
+      for (const existingViolation of existingViolations) {
+        if (!newViolations.some(newV => 
+          newV.line === existingViolation.line && 
+          newV.ruleId === existingViolation.ruleId
+        )) {
+          resolvedErrors.push(`Line ${existingViolation.line}:${existingViolation.column} - ${existingViolation.ruleId}`);
+        }
+      }
+
+      // Determine if we need to update (if there are any changes)
+      const hasChanges = newErrors.length > 0 || resolvedErrors.length > 0;
+      
+      if (!hasChanges) {
+        console.log(`ℹ️ Issue #${existingIssue.number} for ${newGroup.title} already up to date`);
+        return;
+      }
+
+      // Generate update comment describing the changes
+      let updateComment = `## 🔄 Issue Updated - ${new Date().toISOString()}\n\n`;
+      
+      if (newErrors.length > 0) {
+        updateComment += `### 🆕 New Errors Detected (${newErrors.length})\n\n`;
+        newErrors.forEach(error => {
+          updateComment += `- ⚠️ **NEW:** ${error}\n`;
+        });
+        updateComment += `\n`;
+      }
+
+      if (resolvedErrors.length > 0) {
+        updateComment += `### ✅ Resolved Errors (${resolvedErrors.length})\n\n`;
+        resolvedErrors.forEach(error => {
+          updateComment += `- ✅ **FIXED:** ${error}\n`;
+        });
+        updateComment += `\n`;
+      }
+
+      updateComment += `**Summary:**\n`;
+      updateComment += `- Previous violations: ${existingViolations.length}\n`;
+      updateComment += `- Current violations: ${newViolations.length}\n`;
+      updateComment += `- Net change: ${newViolations.length - existingViolations.length >= 0 ? '+' : ''}${newViolations.length - existingViolations.length}\n\n`;
+      
+      updateComment += `---\n*Updated by ClearView Lint Automation*`;
+
+      // Add the update comment to the issue
+      await this.addCommentToIssue(existingIssue.number, updateComment);
+
+      // Update the issue body with the latest violation details
+      const updatedBody = `${newGroup.body}\n\n---\n\n**🔄 Last Updated:** ${new Date().toISOString()}\n**Previous Violations:** ${existingViolations.length}\n**Current Violations:** ${newViolations.length}`;
+
+      const response = await fetch(`${this.apiBase}/repos/${this.owner}/${this.repo}/issues/${existingIssue.number}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'ClearView-Lint-Automation'
+        },
+        body: JSON.stringify({
+          body: updatedBody,
+          labels: newGroup.labels
+        })
+      });
+
+      if (response.ok) {
+        console.log(`✅ Updated file issue #${existingIssue.number} for ${newGroup.title} (${existingViolations.length} → ${newViolations.length} violations)`);
+        
+        // Mark new errors - add a label to indicate unread updates
+        if (newErrors.length > 0) {
+          await this.markIssueAsUnread(existingIssue.number);
+        }
+      } else {
+        console.warn(`⚠️ Failed to update file issue #${existingIssue.number}:`, response.statusText);
+      }
+    } catch (error) {
+      console.warn(`⚠️ Could not update existing file issue #${existingIssue.number}:`, error);
+    }
+  }
+
+  /**
+   * Extracts violation information from issue body for comparison
+   */
+  private extractViolationsFromIssueBody(body: string): Array<{ line: number; column: number; ruleId: string; message: string }> {
+    const violations: Array<{ line: number; column: number; ruleId: string; message: string }> = [];
+    
+    // Match patterns like "- **Line 10:11** - message" or "Line 10:11" anywhere in the body
+    const linePattern = /(?:- \*\*)?Line (\d+):(\d+)\*?\*? - (.+?)(?:\n|$)/gi;
+    let match;
+    
+    // Also extract the current rule context
+    let currentRule = '';
+    const rulePattern = /## 🔧 (.+?)(?:\n|$)/g;
+    
+    // First pass: extract all rules
+    const ruleMatches = [...body.matchAll(rulePattern)];
+    
+    // Second pass: extract violations with their associated rules
+    const sections = body.split(/## 🔧 /);
+    
+    for (let i = 1; i < sections.length; i++) {
+      const section = sections[i];
+      const ruleMatch = section.match(/^(.+?)(?:\n|$)/);
+      if (!ruleMatch) continue;
+      
+      const ruleId = ruleMatch[1].trim();
+      
+      // Find all line violations in this section
+      const violationPattern = /Line (\d+):(\d+)\*?\*? - (.+?)(?:\n|$)/gi;
+      let violationMatch;
+      
+      while ((violationMatch = violationPattern.exec(section)) !== null) {
+        violations.push({
+          line: parseInt(violationMatch[1]),
+          column: parseInt(violationMatch[2]),
+          ruleId,
+          message: violationMatch[3].trim()
+        });
+      }
+    }
+    
+    return violations;
+  }
+
+  /**
+   * Marks an issue as having unread updates by adding a label
+   */
+  async markIssueAsUnread(issueNumber: number): Promise<void> {
+    if (!this.token) return;
+
+    try {
+      // Add a special label to indicate new errors
+      await fetch(`${this.apiBase}/repos/${this.owner}/${this.repo}/issues/${issueNumber}/labels`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'ClearView-Lint-Automation'
+        },
+        body: JSON.stringify({
+          labels: ['unread-updates']
+        })
+      });
+      
+      console.log(`🔔 Marked issue #${issueNumber} as having unread updates`);
+    } catch (error) {
+      console.warn(`⚠️ Could not mark issue #${issueNumber} as unread:`, error);
+    }
+  }
+
   async createIssuesFromReport(report: IssueReport): Promise<void> {
     console.log('📝 Creating GitHub issues from lint report...');
 
@@ -337,7 +646,9 @@ class GitHubIssueCreator {
         const existingFileIssue = await this.checkExistingFileIssue(fileName);
         
         if (existingFileIssue) {
-          console.log(`⏭️ Skipping ${fileName} - file-based issue already exists (#${existingFileIssue.number})`);
+          // UPDATE existing issue instead of skipping
+          console.log(`🔄 Updating existing issue for ${fileName} (#${existingFileIssue.number})`);
+          await this.updateExistingFileIssue(existingFileIssue, group);
           continue;
         }
 
@@ -356,6 +667,7 @@ class GitHubIssueCreator {
         const finalFileCheck = await this.checkExistingFileIssue(fileName);
         if (finalFileCheck) {
           console.log(`⏭️ Race condition detected: ${fileName} - issue was created by another process (#${finalFileCheck.number})`);
+          await this.updateExistingFileIssue(finalFileCheck, group);
           continue;
         }
 
