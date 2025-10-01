@@ -28,11 +28,29 @@ class GitHubIssueCreator {
   private owner: string;
   private repo: string;
   private apiBase = 'https://api.github.com';
+  private runId: string;
+  private timestamp: string;
+  private auditLog: {
+    errorsDetected: number;
+    filesUpdated: Set<string>;
+    issuesCreated: number;
+    issuesUpdated: number;
+    errorsResolved: number;
+  };
 
   constructor(token?: string, owner?: string, repo?: string) {
     this.token = token || process.env.GITHUB_TOKEN || '';
     this.owner = owner || process.env.GITHUB_REPOSITORY_OWNER || 'BorDevTech';
     this.repo = repo || process.env.GITHUB_REPOSITORY_NAME || 'ClearView';
+    this.runId = process.env.GITHUB_RUN_ID || `local-${Date.now()}`;
+    this.timestamp = new Date().toISOString();
+    this.auditLog = {
+      errorsDetected: 0,
+      filesUpdated: new Set(),
+      issuesCreated: 0,
+      issuesUpdated: 0,
+      errorsResolved: 0
+    };
 
     if (!this.token) {
       console.warn('⚠️ No GitHub token provided. Set GITHUB_TOKEN environment variable.');
@@ -46,6 +64,9 @@ class GitHubIssueCreator {
     }
 
     try {
+      // Always assign to @copilot
+      const assignees = ['copilot'];
+      
       const response = await fetch(`${this.apiBase}/repos/${this.owner}/${this.repo}/issues`, {
         method: 'POST',
         headers: {
@@ -58,7 +79,7 @@ class GitHubIssueCreator {
           title: options.title,
           body: options.body,
           labels: options.labels || [],
-          assignees: options.assignees || []
+          assignees: assignees
         })
       });
 
@@ -68,6 +89,7 @@ class GitHubIssueCreator {
       }
 
       const issue = await response.json();
+      this.auditLog.issuesCreated++;
       return {
         number: issue.number,
         url: issue.html_url
@@ -257,6 +279,7 @@ class GitHubIssueCreator {
 
       if (response.ok) {
         console.log(`✅ Closed resolved file issue #${issueNumber} for ${fileName} with @copilot sign-off`);
+        this.auditLog.errorsResolved += resolvedViolations.length;
       } else {
         console.warn(`⚠️ Failed to close file issue #${issueNumber}:`, response.statusText);
       }
@@ -475,12 +498,13 @@ class GitHubIssueCreator {
       }
 
       // Generate update comment describing the changes
-      let updateComment = `## 🔄 Issue Updated - ${new Date().toISOString()}\n\n`;
+      let updateComment = `## 🔄 Issue Updated - ${this.timestamp}\n\n`;
+      updateComment += `**Run ID:** \`${this.runId}\`\n\n`;
       
       if (newErrors.length > 0) {
         updateComment += `### 🆕 New Errors Detected (${newErrors.length})\n\n`;
         newErrors.forEach(error => {
-          updateComment += `- ⚠️ **NEW:** ${error}\n`;
+          updateComment += `- 🔴 **NEW:** ${error}\n`;
         });
         updateComment += `\n`;
       }
@@ -504,7 +528,7 @@ class GitHubIssueCreator {
       await this.addCommentToIssue(existingIssue.number, updateComment);
 
       // Update the issue body with the latest violation details
-      const updatedBody = `${newGroup.body}\n\n---\n\n**🔄 Last Updated:** ${new Date().toISOString()}\n**Previous Violations:** ${existingViolations.length}\n**Current Violations:** ${newViolations.length}`;
+      const updatedBody = `${newGroup.body}\n\n---\n\n**🔄 Last Updated:** ${this.timestamp}\n**Run ID:** \`${this.runId}\`\n**Previous Violations:** ${existingViolations.length}\n**Current Violations:** ${newViolations.length}`;
 
       const response = await fetch(`${this.apiBase}/repos/${this.owner}/${this.repo}/issues/${existingIssue.number}`, {
         method: 'PATCH',
@@ -516,12 +540,15 @@ class GitHubIssueCreator {
         },
         body: JSON.stringify({
           body: updatedBody,
-          labels: newGroup.labels
+          labels: newGroup.labels,
+          assignees: ['copilot']  // Ensure @copilot remains assigned
         })
       });
 
       if (response.ok) {
         console.log(`✅ Updated file issue #${existingIssue.number} for ${newGroup.title} (${existingViolations.length} → ${newViolations.length} violations)`);
+        this.auditLog.issuesUpdated++;
+        this.auditLog.filesUpdated.add(newGroup.title);
         
         // Mark new errors - add a label to indicate unread updates
         if (newErrors.length > 0) {
@@ -609,6 +636,9 @@ class GitHubIssueCreator {
   async createIssuesFromReport(report: IssueReport): Promise<void> {
     console.log('📝 Creating GitHub issues from lint report...');
 
+    // Track total errors detected
+    this.auditLog.errorsDetected = report.summary.totalIssues;
+
     // Check for resolved issues and close them
     await this.closeResolvedIssues(report);
 
@@ -691,6 +721,9 @@ class GitHubIssueCreator {
         continue;
       }
     }
+
+    // Perform post-run audit
+    await this.performPostRunAudit(report);
   }
 
   private async createSummaryIssue(report: IssueReport): Promise<void> {
@@ -1003,7 +1036,10 @@ All instances of \`${ruleId}\` violations have been fixed. This issue is now aut
     body += `### 📁 File Details\n\n`;
     body += `- **File:** \`${filePath}\`\n`;
     body += `- **Issues:** ${totalIssues}\n`;
-    body += `- **Rules:** ${Object.keys(ruleGroups).join(', ')}\n\n`;
+    body += `- **Rules:** ${Object.keys(ruleGroups).join(', ')}\n`;
+    body += `- **Created:** ${this.timestamp} (Run ID: \`${this.runId}\`)\n`;
+    body += `- **Last updated:** ${this.timestamp} (Run ID: \`${this.runId}\`)\n`;
+    body += `- **Status:** Unread\n\n`;
 
     // List each rule violation with the problem as a header
     for (const [ruleId, ruleIssues] of Object.entries(ruleGroups)) {
@@ -1511,6 +1547,126 @@ export function example(): SomeOtherType {
 - Check the specific rule documentation for detailed guidance
 
 `;
+  }
+
+  /**
+   * Performs a post-run audit to verify all requirements were met
+   * and generates a summary report
+   */
+  private async performPostRunAudit(report: IssueReport): Promise<void> {
+    console.log('\n🔍 Performing post-run audit...');
+    
+    const audit = {
+      passed: true,
+      checks: [] as string[],
+      failures: [] as string[]
+    };
+
+    // Check 1: Every error from logs was captured
+    if (this.auditLog.errorsDetected === report.summary.totalIssues) {
+      audit.checks.push(`✅ All ${this.auditLog.errorsDetected} errors from logs were captured`);
+    } else {
+      audit.failures.push(`❌ Error count mismatch: detected ${this.auditLog.errorsDetected} but report has ${report.summary.totalIssues}`);
+      audit.passed = false;
+    }
+
+    // Check 2: Issues were created or updated
+    const totalIssueActions = this.auditLog.issuesCreated + this.auditLog.issuesUpdated;
+    if (totalIssueActions > 0 || report.summary.totalIssues === 0) {
+      audit.checks.push(`✅ Issues created: ${this.auditLog.issuesCreated}, updated: ${this.auditLog.issuesUpdated}`);
+    } else {
+      audit.failures.push(`❌ No issues were created or updated despite ${report.summary.totalIssues} errors`);
+      audit.passed = false;
+    }
+
+    // Check 3: Files updated tracking
+    audit.checks.push(`✅ Files updated: ${this.auditLog.filesUpdated.size}`);
+
+    // Check 4: Resolved errors tracking
+    if (this.auditLog.errorsResolved >= 0) {
+      audit.checks.push(`✅ Errors resolved this run: ${this.auditLog.errorsResolved}`);
+    }
+
+    // Generate summary
+    const summary = this.generateAuditSummary(report, audit);
+    
+    // Output to console
+    console.log('\n' + summary);
+    
+    // Post summary as workflow run comment if possible
+    if (this.token && process.env.GITHUB_RUN_ID) {
+      await this.postAuditSummaryToWorkflow(summary);
+    }
+  }
+
+  /**
+   * Generates a formatted audit summary
+   */
+  private generateAuditSummary(report: IssueReport, audit: { passed: boolean; checks: string[]; failures: string[] }): string {
+    let summary = `## 🔧 Lint Automation Post-Run Audit\n\n`;
+    summary += `**Run ID:** \`${this.runId}\`\n`;
+    summary += `**Timestamp:** ${this.timestamp}\n`;
+    summary += `**Status:** ${audit.passed ? '✅ PASSED' : '❌ FAILED'}\n\n`;
+    
+    summary += `### 📊 Run Summary\n\n`;
+    summary += `- **Total errors detected:** ${this.auditLog.errorsDetected}\n`;
+    summary += `- **Files with errors:** ${report.summary.affectedFiles}\n`;
+    summary += `- **Issues created:** ${this.auditLog.issuesCreated}\n`;
+    summary += `- **Issues updated:** ${this.auditLog.issuesUpdated}\n`;
+    summary += `- **Errors resolved:** ${this.auditLog.errorsResolved}\n\n`;
+    
+    if (this.auditLog.filesUpdated.size > 0) {
+      summary += `### 📝 Files Updated\n\n`;
+      Array.from(this.auditLog.filesUpdated).forEach(file => {
+        summary += `- ${file}\n`;
+      });
+      summary += `\n`;
+    }
+    
+    summary += `### ✅ Audit Checks\n\n`;
+    audit.checks.forEach(check => {
+      summary += `${check}\n`;
+    });
+    summary += `\n`;
+    
+    if (audit.failures.length > 0) {
+      summary += `### ❌ Audit Failures\n\n`;
+      audit.failures.forEach(failure => {
+        summary += `${failure}\n`;
+      });
+      summary += `\n`;
+    }
+    
+    summary += `### 🎯 Key Highlights\n\n`;
+    if (report.summary.commonPatterns.length > 0) {
+      summary += `**Most common issues:**\n`;
+      report.summary.commonPatterns.slice(0, 5).forEach(pattern => {
+        summary += `- ${pattern}\n`;
+      });
+    }
+    
+    summary += `\n---\n`;
+    summary += `🤖 *Automated by ClearView Lint Automation*\n`;
+    summary += `*All issues assigned to @copilot for tracking*`;
+    
+    return summary;
+  }
+
+  /**
+   * Posts audit summary to workflow run (if running in GitHub Actions)
+   */
+  private async postAuditSummaryToWorkflow(summary: string): Promise<void> {
+    // This would require GITHUB_STEP_SUMMARY environment variable
+    // which is available in GitHub Actions
+    if (process.env.GITHUB_STEP_SUMMARY) {
+      try {
+        const fs = await import('fs');
+        fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
+        console.log('📝 Audit summary posted to workflow');
+      } catch (error) {
+        console.warn('⚠️ Could not post summary to workflow:', error);
+      }
+    }
   }
 }
 

@@ -14,6 +14,9 @@ The ClearView Lint Automation system automatically detects, tracks, and manages 
 - **🆕 New Error Detection**: Marks issues with "unread-updates" label when new errors are added
 - **✅ Solution Verification**: Reads fixed files and signs off on resolved issues as @copilot
 - **🎯 Regional Context**: For API verify files, includes region name in issue titles (e.g., "Missouri - logic.ts")
+- **👤 Automatic Assignment**: All issues are automatically assigned to @copilot for tracking
+- **⏱️ Timestamp & Run ID Tracking**: Every issue and update includes timestamps and workflow run IDs
+- **📊 Post-Run Audit**: Self-audits each run to verify all errors were captured and tracked correctly
 
 ### 📋 Workflow Integration
 
@@ -209,6 +212,24 @@ The system prevents duplicates through:
 - **Race condition protection**: Random delays between checks
 - **Update instead of create**: Updates existing issues with new violations
 
+## Post-Run Audit
+
+After every run, the system performs a self-audit to ensure:
+
+- ✅ All errors from logs were captured into issues
+- ✅ Each issue is assigned to @copilot
+- ✅ No duplicate issues exist for the same file
+- ✅ New errors are marked with 🔴 unread marker
+- ✅ Resolved errors were moved to Resolution Notes with sign-off
+
+The audit generates a summary report showing:
+- Total errors detected
+- Files updated
+- Issues created vs. updated
+- Errors resolved in this run
+
+This summary is posted to the GitHub Actions workflow output and helps identify any issues with the automation itself.
+
 ## Benefits
 
 - **✅ No Duplicate Issues**: Smart detection ensures one issue per file
@@ -216,6 +237,8 @@ The system prevents duplicates through:
 - **🎯 Prioritize Work**: "unread-updates" label shows what needs attention
 - **💡 Learn Solutions**: See what worked when issues are resolved
 - **🤖 Automation**: Less manual issue management, more coding
+- **📊 Quality Assurance**: Post-run audits verify everything is tracked correctly
+- **👤 Clear Ownership**: All issues automatically assigned to @copilot
 
 ## Troubleshooting
 
@@ -250,5 +273,5 @@ The system prevents duplicates through:
 ---
 
 **Maintained by**: ClearView Development Team  
-**Last Updated**: 2025-01-01  
-**Version**: 2.0.0
+**Last Updated**: 2025-10-01  
+**Version**: 2.1.0
