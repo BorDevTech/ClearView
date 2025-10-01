@@ -1,5 +1,107 @@
 # Lint Automation System - Changelog
 
+## Version 2.1.0 (2025-10-01)
+
+### 🎉 Enhanced Issue Tracking & Auditing
+
+This release adds automated assignment, timestamp tracking, and post-run audit capabilities to ensure complete visibility and accountability in the lint issue management process.
+
+### ✨ New Features
+
+#### 1. Automatic @copilot Assignment
+- **All issues are now automatically assigned to @copilot** on creation
+- **Assignee is preserved on updates** to maintain tracking continuity
+- **Ensures clear ownership** and responsibility for all lint issues
+- No more unassigned lint issues floating around!
+
+#### 2. Timestamp & Run ID Tracking
+- **Every issue includes creation timestamp** with ISO 8601 format
+- **Workflow run ID is captured** in issue metadata
+- **Last updated timestamp** is added to issue body on updates
+- **Update comments include run ID** for full traceability
+- Enables complete audit trail for all lint issues
+
+Example issue metadata:
+```
+- **Created:** 2025-10-01T18:55:06.044Z (Run ID: `18172226111`)
+- **Last updated:** 2025-10-01T18:56:20.946Z (Run ID: `18172226112`)
+- **Status:** Unread
+```
+
+#### 3. Post-Run Audit System
+- **Automatic self-audit after every run** to verify correctness
+- **Comprehensive verification checks**:
+  - ✅ All errors from logs were captured
+  - ✅ Each issue is assigned to @copilot
+  - ✅ No duplicate issues exist
+  - ✅ New errors are marked as unread
+  - ✅ Resolved errors are properly signed off
+- **Detailed summary report** posted to workflow output
+- **Audit status** (PASSED/FAILED) with specific check results
+
+Example audit output:
+```
+## 🔧 Lint Automation Post-Run Audit
+
+**Run ID:** `18172226111`
+**Timestamp:** 2025-10-01T18:55:06.044Z
+**Status:** ✅ PASSED
+
+### 📊 Run Summary
+- **Total errors detected:** 3
+- **Files with errors:** 1
+- **Issues created:** 1
+- **Issues updated:** 0
+- **Errors resolved:** 0
+
+### ✅ Audit Checks
+✅ All 3 errors from logs were captured
+✅ Issues created: 1, updated: 0
+✅ Files updated: 1
+✅ Errors resolved this run: 0
+```
+
+### 🔧 Technical Improvements
+
+#### New Properties
+- `runId` - Captures GitHub Actions run ID or generates local ID
+- `timestamp` - ISO 8601 timestamp for the run
+- `auditLog` - Tracks all actions for post-run verification
+
+#### Enhanced Methods
+- `createIssue()` - Now includes automatic @copilot assignment
+- `updateExistingFileIssue()` - Preserves @copilot assignment and adds run metadata
+- `closeResolvedFileIssue()` - Tracks resolved errors in audit log
+- `createIssuesFromReport()` - Initializes audit tracking
+
+#### New Methods
+- `performPostRunAudit()` - Executes comprehensive post-run checks
+- `generateAuditSummary()` - Creates formatted audit report
+- `postAuditSummaryToWorkflow()` - Posts summary to GitHub Actions output
+
+### 📚 Documentation Updates
+
+- Updated **README.md** with new features
+- Added **Post-Run Audit** section explaining verification process
+- Updated version to 2.1.0
+- Enhanced benefits section with quality assurance and ownership
+
+### 🐛 Bug Fixes
+
+- Fixed issue where assignees could be lost on updates
+- Improved audit logging for better debugging
+- Better error tracking in post-run reports
+
+### 📈 Benefits
+
+- **Complete Accountability**: Every issue has a clear owner (@copilot)
+- **Full Traceability**: Timestamps and run IDs enable complete audit trail
+- **Quality Assurance**: Automated audits catch any gaps in tracking
+- **Better Debugging**: Detailed logs help identify automation issues
+- **Compliance Ready**: Comprehensive tracking supports audit requirements
+
+---
+
 ## Version 2.0.0 (2025-01-01)
 
 ### 🎉 Major Release - Complete Redesign
