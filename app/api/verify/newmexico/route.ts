@@ -15,13 +15,16 @@ export async function GET(request: NextRequest) {
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
         Referer: "https://online.bvm.nm.gov",
         Origin: "https://online.bvm.nm.gov",
-        Accept: "*/*",
+        Accept: "application/json",
       },
     });
-    const data = await response.text();
-    return new Response(data, {
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-      status: response.status,
+    if (!response.ok) {
+      throw new Error(`Failed with status: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return Response.json(data, {
+      status: 200,
     });
   } catch (error) {
     return Response.json(
