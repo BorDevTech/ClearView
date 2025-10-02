@@ -14,7 +14,7 @@ on:
       create_issues:
         description: 'Create GitHub issues for lint problems'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
 permissions:
