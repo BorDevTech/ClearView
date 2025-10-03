@@ -14,8 +14,8 @@ import { put } from "@vercel/blob";
 type Payload = {
     timestamp: string;
     region: string;
-    count: number
-    results: any[];
+    count: number;
+    results: object[];
 };
 
 

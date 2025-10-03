@@ -15,6 +15,6 @@ export default async function BlobCreate(region: string) {
         contentType: "application/json",
         token
     });
-    console.log(`✅ Created Blob: ${createdBlob.url}`);
+    console.log(`✅ Created ${region} Blob Successfully: ${createdBlob.url}`);
     return createdBlob.url;
 }
