@@ -64,8 +64,17 @@ class GitHubIssueCreator {
     }
 
     try {
-      // Always assign to @copilot
-      const assignees = ['copilot'];
+      // Prepare the issue body - assignees can be configured via options
+      const issueBody: any = {
+        title: options.title,
+        body: options.body,
+        labels: options.labels || []
+      };
+
+      // Only add assignees if they are provided
+      if (options.assignees && options.assignees.length > 0) {
+        issueBody.assignees = options.assignees;
+      }
       
       const response = await fetch(`${this.apiBase}/repos/${this.owner}/${this.repo}/issues`, {
         method: 'POST',
@@ -75,12 +84,7 @@ class GitHubIssueCreator {
           'Accept': 'application/vnd.github.v3+json',
           'User-Agent': 'ClearView-Lint-Automation'
         },
-        body: JSON.stringify({
-          title: options.title,
-          body: options.body,
-          labels: options.labels || [],
-          assignees: assignees
-        })
+        body: JSON.stringify(issueBody)
       });
 
       if (!response.ok) {
