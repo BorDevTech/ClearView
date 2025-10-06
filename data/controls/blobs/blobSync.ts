@@ -17,13 +17,13 @@ import BlobUpdate from "./blobUpdate";
 export default async function BlobSync(region: string, results?: VetResult[],) {
     // ☁️ Check if Vercel Blob exists 
 
-    const blobKey = `${region}Vets.json`;
+    const blobKey = `${region}`;
     try {
         const exists = await BlobCheck(region);
         if (!exists) {
             console.log("⚠️ Blob not found, creating...");
             // ☁️ Upload to Vercel Blob
-            const createdBlob = await BlobCreate(blobKey);
+            const createdBlob = await BlobCreate(region);
             return createdBlob;
         }
         if (exists && results && results.length > 0) {

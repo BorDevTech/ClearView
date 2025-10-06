@@ -11,6 +11,7 @@ export default async function BlobFetch(
         await BlobCheck(region);
         // 🔍 Pull existing blob
         const url = `${process.env.BLOB_STORE_URL}/${blobKey}`;
+        // const url = `https://tbvjhsvoecgza1uc.public.blob.vercel-storage.com/${blobKey}`;
         const response = await fetch(url, {
             method: "GET",
             headers: {
