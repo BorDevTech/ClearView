@@ -66,3 +66,7 @@ const regionEntryMap: Record<string, (keyof VetResult)[]> = {
   XX: ["status"]
   // ...add the rest
 };
+const RegionSources: Record<string, string> = {
+  AL: "https://www.albvetmed.org/veterinarian-search/",
+  AK: "https://www.commerce.alaska.gov/cbp/main/search/ProfessionalLicenseSearch",
+}
